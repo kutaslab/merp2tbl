@@ -289,8 +289,7 @@ def parse_long_merp_output(data_bytes, err_bytes):
     # line 3 measurement info, may not exist, e.g., on bad baseline error
     re3 = re.compile(r'.+\n.+\n(?P<meas_desc>.+?)(?P<value>[\.\d]+)\s(?P<units>\S+$)')
 
-
-    # error check via None.groupdict() raises AttributeError if re.match fails
+    # None.groupdict() raises AttributeError if re.match fails
 
     # rough chunk the string
     for regex, matchlen in [ (re1,2), (re2,5), (re3,3) ]:
