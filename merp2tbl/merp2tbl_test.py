@@ -22,6 +22,7 @@ def test_load_merp_file():
 def test_run_merp():
     for mcf in good_mcfs:
         result = merp2tbl.run_merp(mcf)
-        pp.pprint(result)
+        merp2tbl.format_output(result)
+        merp2tbl.format_output(result, format='yaml')
         
 

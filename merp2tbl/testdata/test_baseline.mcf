@@ -1,5 +1,5 @@
 file calstest.x.nrm  # filenames here
-# file calstest.x.nrm
+file calstest.x.avg
 
 # ### Bin 18 - Correct Rejections (CR) ###
 # ### Bin 22 - Hits ###
@@ -8,18 +8,16 @@ file calstest.x.nrm  # filenames here
 # ###channels Cz(2) T5 (9) Fz(17) Pz(18) F3(21) F4(22) CP1(27)###
 
 baseline -100 0
-filter lpX 0 15
 
 # ## Fz, F3, F4 ##
 # channels 17 21 22
-# channels 15 21 22
-channels 15
+channels 15 21 22
+# channels 
 
-meana 10 $ * 200 400
-# fal 1 $ * 250 400 + .5
-# lpkl 1 $ * 258 264 + 3
-# lpka 1 $ * 254 260 + 3
-
+meana 1 $ * 200 400
+fal 1 $ * 250 400 + .5
+lpkl 1 $ * 258 264 + 3
+lpka 1 $ * 254 260 + 3
 
 # meana 22 $ * 200 400
 # lpkl 22 $ * 200 400 + 3
