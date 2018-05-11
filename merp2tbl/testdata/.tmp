@@ -1,0 +1,4 @@
+file calstest.x.nrm
+baseline -100 0
+filter lpX 0 15
+meana 10 15 calstest.x.nrm 200 400
