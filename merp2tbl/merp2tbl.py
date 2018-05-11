@@ -248,20 +248,18 @@ def parse_long_merp_output(data_bytes, err_bytes):
       characters of the channel label field, dropping the last 4, if
       any. So MiPa -> MiPa and MiCeMiPa -> MiCe
 
-
     '''
 
-    # clean up the long form out returned by merp, tabs aren't
-    # expected but strip in case
+    # tabs aren't expected but strip anyway 
     data = data_bytes.decode('utf-8').strip().replace('\t',' ')
 
-    # first line of stderr
-    #err = re.sub(r'[\n\t ]+', ' ', err_bytes.decode('utf-8')).strip().split('\n')[0]
+    # soft error reports are 2 or more lines, just take the first 
     err_regexp = re.compile(r'(?P<error>^.*)\n')
     err = re.match(err_regexp, err_bytes.decode('utf-8'))
     if err is None:
         err = ''
     else:
+        # squeeze extra whitespace 
         err = re.sub('\s+', ' ', err['error'])
 
     # catch merp hard errors
@@ -269,41 +267,66 @@ def parse_long_merp_output(data_bytes, err_bytes):
         msg = 'No merp output: {0}'.format(err)
         raise RuntimeError(msg)
 
-    # collect 2-ples of (key, value) to build the table row columns
-    row_dict = dict(
-        chan='NA',epochs_n='NA',
-        condition='NA', expt = 'NA', merp_str='NA',
-        measure='NA', value='NA', units='NA')
 
-    # b.c. of merp channel label bug we grab the last four chars of
-    # the channel description strip double chan bug
+    # ok, get to it ....
+
+    # the values are set by eponymous regexp named capture groups
+    output_keys = ['chan', 'epochs_n', 'condition', 'expt', 'meas_desc',
+                   'value', 'units', 'subject', 'bin_n', 'bin_desc', 'meas_label',
+                   'chan_num', 'erp_f', 'win_start', 'win_stop', 'meas_args']
+    row_dict = dict([(k,'NA') for k in output_keys])
+
+    # line 1 channel label and trial count, work around double label merp bug
     re1 = re.compile('^Channel\s+(?P<chan>.{4})(?:.{4})*\s+Sum of\s+(?P<epochs_n>\S+)')
 
-    # split into fixed length fields except the last ... which is followed
-    # by a line of data unless there is an error ...
+    # line 2 fixed length fields until the last 
     re2 = re.compile( ('^.+\n(?P<subject>.{41})'
                        '(?P<binfo>.{40})'
                        '(?P<condition>.{41})'
                        '(?P<expt>.{40})'
-                       '(?P<merp_str>.*)[\\\\n]*' ))
-    re3 = re.compile(r'.+\n.+\n(?P<measure>.+?)(?P<value>[\.\d]+)\s(?P<units>\S+$)')
+                       '(?P<meas_specs>.*)[\\\\n]*' ))
 
+    # line 3 measurement info, may not exist, e.g., on bad baseline error
+    re3 = re.compile(r'.+\n.+\n(?P<meas_desc>.+?)(?P<value>[\.\d]+)\s(?P<units>\S+$)')
+
+
+    # error check via None.groupdict() raises AttributeError if re.match fails
+
+    # rough chunk the string
     for regex, matchlen in [ (re1,2), (re2,5), (re3,3) ]:
-        line = None
-        line = regex.match(data)
-        if line is not None and len(line.groupdict()) == matchlen:
-            row_dict.update(line.groupdict())
+        matches = None
+        matches = regex.match(data)
+        if matches is not None and len(matches.groupdict()) == matchlen:
+            row_dict.update(matches.groupdict())
 
-    # special processing for the 40 char bin spec
-    bin_match = re.match('^\s*bin\s+(?P<bin_num>\d+)\s+(?P<bin_desc>.*)', 
-                         row_dict['binfo'])
-    assert bin_match is not None and len(bin_match.groupdict()) == 2
-    del(row_dict['binfo'])
+    # parse the 40 char bin info or die
+    bin_info = re.match('^\s*bin\s+(?P<bin_n>\d+)\s+(?P<bin_desc>.*)', 
+                         row_dict['binfo']).groupdict()
+    assert len(bin_info) == 2
+
+    # parse the meas_specs string into, well, measurement specs
+    meas_regex = re.compile( ('(^(?P<meas_label>\w+)\s+(?P<bin_n2>\d+)\s'
+                              '(?P<chan_num>\d+)\s+(?P<erp_f>\S+)\s+'
+                              '(?P<win_start>\d+)\s+(?P<win_stop>\d+)\s+'
+                              '(?P<meas_args>.*$))') )
+    meas_specs = meas_regex.match(row_dict['meas_specs']).groupdict()
+    assert len(meas_specs) == 7
 
     # add the new items
-    kvs = [(k,v) for d in [row_dict, bin_match.groupdict()] for k,v in d.items() ]
+    kvs = [(k,v) for d in [row_dict, bin_info, meas_specs] for k,v in d.items() ]
     for k,v in kvs:
         row_dict[k] = v.strip()
+
+    # sanity checks ... 
+    assert row_dict['bin_n'] == row_dict['bin_n2']
+
+    # these were parsed, drop the strings 
+    del(row_dict['bin_n2'])
+    del(row_dict['binfo'])
+    del(row_dict['meas_specs'])
+
+    # finally 
+    assert set(row_dict.keys()) == set(output_keys)
 
     # handle missing data
     if re.match('.+',err):
@@ -312,7 +335,7 @@ def parse_long_merp_output(data_bytes, err_bytes):
     else:
         row_dict['error'] = 'NA'
 
-    # works float, ints and fails on unconvertable str
+    # float, ints and fails on unconvertable str
     if row_dict['value'] != 'NA':
         assert type(float(row_dict['value'])) is float
 
