@@ -45,16 +45,22 @@ def test_run_merp():
         
 
 def test_select_columns():
-
     for mcf in good_mcfs + softerror_mcfs:
         result = merp2tbl.run_merp(mcf)
-        cols = list(result[0].keys())[0:2]
-        for format in ['tsv', 'yaml']:
-            print('# ' + '-' * 40)
-            print('# mcf: {0} format: {1}'.format(mcf, format))
-            print('# ' + '-' * 40)
-            merp2tbl.format_output(result, format=format, out_keys = cols)
-            print()
+
+        n_cols = len(result[0].keys())
+        col_names = [k for k in result[0].keys()]
+        assert n_cols >= 2
+
+        # select even and odd colums = 2 subsets that cover all columns
+        for subset in [0,1]:
+            cols = [col_names[idx] for idx in range(subset, n_cols, 2)]
+            for format in ['tsv', 'yaml']:
+                print('# ' + '-' * 40)
+                print('# mcf: {0} format: {1}'.format(mcf, format))
+                print('# ' + '-' * 40)
+                merp2tbl.format_output(result, format=format, out_keys = cols)
+                print()
         
 
 

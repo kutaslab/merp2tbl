@@ -153,6 +153,7 @@ def format_output(results, format='tsv', out_keys=None):
     -----
 
     '''
+
     # helper to convert the merp string output to python scalar types
     def spec2dtype(key_fmt,val_str):
         ''' converts val_str to data type according to _fmt, returns key, val 2-ple '''
@@ -165,8 +166,8 @@ def format_output(results, format='tsv', out_keys=None):
 
         key = key_spec['key'] # == key_fmt stripped of '_fmt'
 
-        # strings don't need conversion
-        if key_spec['spec'] == 's':
+        # strings including NA don't need conversion
+        if key_spec['spec'] == 's' or val_str == 'NA':
             val = val_str
         else: 
             val = spec_map[key_spec['spec']](val_str) # coerce string to float or int
@@ -185,7 +186,6 @@ def format_output(results, format='tsv', out_keys=None):
     if format == 'tsv':
         # tab separate with header 
         header = '\t'.join(out_keys) + '\n'
-        data = '\n'.join([ '\t'.join([r[k] for k in out_results.keys()]) for r in out_results])
         data = '\n'.join(['\t'.join([str(v) for v in r.values()]) for r in out_results])
         output = header + data
 
@@ -211,7 +211,7 @@ def run_merp(mcf):
 
     Returns
     -------
-    table_rows : list of dict
+    measurements : list of dict
         each dict is the parsed long form merp output of one test
 
     Notes
@@ -232,7 +232,7 @@ def run_merp(mcf):
 
     '''
     
-    table_rows = [] # results
+    measurements = [] # results
     all_tests = []  # minimal merp commands to run one test
 
     # fetch the merp command file
@@ -306,23 +306,23 @@ def run_merp(mcf):
             msg += pp.pformat(test)
             raise RuntimeError(msg)
 
-        table_row = parse_long_merp_output(stdout, stderr)
+        measurement = parse_long_merp_output(stdout, stderr)
 
         # snapshot MD5 of file measured ... 
-        with open(table_row['erpfile_s'], 'rb') as f:
+        with open(measurement['erpfile_s'], 'rb') as f:
             m = hashlib.md5()
             m.update(f.read())
-        table_row.update({'erp_md5_s': m.hexdigest()})
+        measurement.update({'erp_md5_s': m.hexdigest()})
 
         # add extra metadata here ... baseline
         for transform in ['baseline_s']:
             if transform in merp_cmds.keys():
-                table_row.update({transform:  merp_cmds[transform]})
+                measurement.update({transform:  merp_cmds[transform]})
 
-        table_row.update({'merpfile_s': mcf})
+        measurement.update({'merpfile_s': mcf})
 
-        table_rows.append(table_row)
-    return(table_rows)
+        measurements.append(measurement)
+    return(measurements)
 
 
 def parse_long_merp_output(data_bytes, err_bytes):
