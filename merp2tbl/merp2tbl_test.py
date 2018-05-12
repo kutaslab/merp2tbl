@@ -14,6 +14,11 @@ good_mcfs = glob.glob('*good*.mcf')
 softerror_mcfs = glob.glob('*softerror*.mcf')
 harderror_mcfs = glob.glob('*harderror*.mcf')
 
+def test_minimal_good():
+    mcf = 'test_minimal_good.mcf'
+    merp_cmds = merp2tbl.parse_merpfile(mcf)
+    result = merp2tbl.run_merp(mcf)
+
 def test_load_merp_file():
     # go tests
     for mcf in good_mcfs: 
@@ -27,16 +32,29 @@ def test_load_merp_file():
         with pytest.raises(Exception):
             merp_cmds = merp2tbl.parse_merpfile(mcf)
 
-def test_minimal_good():
-    mcf = 'test_minimal_good.mcf'
-    merp_cmds = merp2tbl.parse_merpfile(mcf)
-    result = merp2tbl.run_merp(mcf)
-
 def test_run_merp():
     for mcf in good_mcfs + softerror_mcfs:
         result = merp2tbl.run_merp(mcf)
-        merp2tbl.format_output(result)
-        merp2tbl.format_output(result, format='yaml')
+
+        for format in ['tsv', 'yaml']:
+            print('# ' + '-' * 40)
+            print('# mcf: {0} format: {1}'.format(mcf, format))
+            print('# ' + '-' * 40)
+            merp2tbl.format_output(result, format=format)
+            print()
+        
+
+def test_select_columns():
+
+    for mcf in good_mcfs + softerror_mcfs:
+        result = merp2tbl.run_merp(mcf)
+        cols = list(result[0].keys())[0:2]
+        for format in ['tsv', 'yaml']:
+            print('# ' + '-' * 40)
+            print('# mcf: {0} format: {1}'.format(mcf, format))
+            print('# ' + '-' * 40)
+            merp2tbl.format_output(result, format=format, out_keys = cols)
+            print()
         
 
 
