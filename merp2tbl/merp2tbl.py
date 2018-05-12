@@ -9,20 +9,20 @@ import pprint as pp
 
 # pkla # exclude, this dumps 2 lines of data and is buggy wrt to soft errors
 
-transforms = ['filter', 'baseline', 'nobaseline']
+transforms = ['baseline', 'nobaseline']
 merp_catalog = [ 'pkl', 'centroid', 'pka', 'fpl' 'fplf', 'fpa',
                  'fpaf', 'lpkl', 'lpka', 'lfpl', 'fal', 'faa', 'ppa', 'npppa', 'pnppa',
                  'lnpppa', 'lpnppa', 'abblat', 'bonslat', 'pxonslat', 'nxonslat',
                  'rms', 'meana', 'mnarndpk', 'slope', 'pks' ]
     
 
-def parse_merp_file(merp_f):
+def parse_merpfile(merpfile):
     ''' parse merp command file in order to unwind the file and channel wildcards
 
 
     Parameters
     ----------
-    merp_f : str
+    merpfile : str
         name of a merp file
 
     Notes
@@ -48,7 +48,7 @@ def parse_merp_file(merp_f):
     ```
 
     '''
-    with open(merp_f, 'r') as f:
+    with open(merpfile, 'r') as f:
         merp_cmds = f.read()
     merp_cmds = re.sub('\n+','\n', merp_cmds)
     merp_cmds = merp_cmds.split('\n')
@@ -60,22 +60,23 @@ def parse_merp_file(merp_f):
     # cleanup trailing comments
     merp_cmds = [re.sub('\s+#.+$', '', m).strip() for m in merp_cmds]
 
-    cmd_dict = dict(files='NA', 
-                    channels='NA', baseline='NA', filter='NA', 
-                    tests='NA')
+    cmd_dict = dict(files='NA', channels='NA', baseline='NA', tests='NA')
 
     # 0 = start,
     # 1 = loading files,
-    # 2 = loading chans, baseline, filter specs order doesn't matter
+    # 2 = loading chans, baseline, doesn't matter
     # 3 = loading tests
 
     parse_phase = 0 # start
+    implemented_cmds = ['file', 'channels'] + transforms + merp_catalog
     for cmd in merp_cmds:
         cmd_spec = cmd.split(' ')
-        if cmd_spec[0] not in ['file', 'channels'] + transforms + merp_catalog:
-            raise ValueError('unknown merp command: ', cmd)
+        if cmd_spec[0] not in implemented_cmds:
+            msg = 'merpfile: {0} line: {1}\n'.format(merpfile,cmd)
+            msg += pp.pformat('choose from: ' + ' '.join(implemented_cmds))
+            raise NotImplementedError(msg)
 
-        # handle files ... must be first items
+        # handle files ... these must come first
         if cmd_spec[0] == 'file':
             if not parse_phase <= 1:
                 raise ValueError('file command out of order: ' + cmd)
@@ -87,7 +88,7 @@ def parse_merp_file(merp_f):
             else:
                 cmd_dict['files'].append(cmd_spec[1])
 
-        # handle chans and transforms
+        # handle chans and/or baseline
         if cmd_spec[0] in ['channels'] + transforms:
             if parse_phase not in [1,2]:
                 raise ValueError('command out of order: ' + cmd)
@@ -99,13 +100,10 @@ def parse_merp_file(merp_f):
                 cmd_dict['channels'] = chan_ids
 
             elif cmd_spec[0] == 'baseline':
-                cmd_dict['baseline'] = cmd
+                cmd_dict['baseline_s'] = cmd
 
             elif cmd_spec[0] == 'nobaseline':
-                cmd_dict['baseline'] = cmd_spec[0]
-
-            elif cmd_spec[0] == 'filter':
-                cmd_dict['filter'] = cmd
+                cmd_dict['baseline_s'] = cmd_spec[0]
 
             else:
                 raise ValueError('uh oh ... ' + cmd_spec)
@@ -122,8 +120,6 @@ def parse_merp_file(merp_f):
     return(cmd_dict)
 
 def format_output(results, format='tsv', out_keys=None):
-    # out_keys = ['baseline', 'chan', 'bin_num', 'bin_desc', 'value', 'units', 'error', 'erp_md5']
-
     assert format in ['tsv', 'yaml']
 
     # white list columns to output
@@ -149,10 +145,9 @@ def format_output(results, format='tsv', out_keys=None):
 def run_merp(mcf):
 
     # fetch the merp command file
-    merp_cmds = parse_merp_file(mcf)
-
+    merp_cmds = parse_merpfile(mcf)
     # unpack the wildcards, if any, into individual commands
-    test_params = ['measure', 'bin', 'filespec', 'chanspec']
+    test_params = ['measure', 'bin', 'chanspec', 'filespec']
 
     table_rows = [] # results
     all_tests = []  # 
@@ -160,30 +155,33 @@ def run_merp(mcf):
         # test format 
         # name bin filespec chanspec arg0 ... argN
         test = test_str.split()
-        test_specs = dict([*zip(test_params, test[slice(0,len(test_params))])])
-
+        # test_specs = dict([*zip(test_params, test[slice(0,len(test_params))])])
+        test_specs = dict()
+        for i,k in enumerate(test_params):
+            test_specs[k] = test[i]
         # handle the arguments
         test_specs['argspec'] = test[len(test_params):]
 
         # expand file wild card if any
-        if test_specs['filespec'] == '$':
+        if test_specs['filespec'] == '*':
             test_specs['filespec'] = merp_cmds['files']
         else:
-            test_specs['filespec'] = list(test_specs['filespec'])
+            test_specs['filespec'] = [ test_specs['filespec'] ]
 
         # expand channel wildcard if any 
-        if test_specs['chanspec'] == '*':
+        if test_specs['chanspec'] == '$':
             test_specs['chanspec'] = merp_cmds['channels']
         else:
             test_specs['chanspec'] = list(test_specs['chanspec'])
 
         for chan in test_specs['chanspec']:
             for erpfile in test_specs['filespec']:
+
                 # build the file, baseline, and optional filter lines
                 this_file_lines = 'file {0}\n'.format(erpfile)
-                this_file_lines += '{0}\n'.format(merp_cmds['baseline'])
-                if merp_cmds['filter'] is not 'NA':
-                    this_file_lines += '{0}\n'.format(merp_cmds['filter'])
+
+                if 'baseline_s' in merp_cmds.keys():
+                    this_file_lines += '{0}\n'.format(merp_cmds['baseline_s'])
 
                 # set the measurement and params
                 this_test_spec = ' '.join([
@@ -201,24 +199,35 @@ def run_merp(mcf):
     for test in all_tests:
         with open('.tmp', 'w') as f:
             f.write(test)
+
         file_proc = subprocess.Popen(['cat', '.tmp'], stdout=subprocess.PIPE)
         merp_proc = subprocess.Popen(['merp', '-'], stdin = file_proc.stdout, 
                                      stdout=subprocess.PIPE, 
                                      stderr=subprocess.PIPE)
         stdout, stderr = merp_proc.communicate()
+
+        # catch merp hard errors with no data
+        if re.match('^$',stdout.decode('utf-8')):
+            pdb.set_trace()
+            msg = 'No merp output: {0}'.format(stderr.decode('utf-8'))
+            msg += 'merpfile: {0}: '.format(mcf)
+            msg += pp.pformat(test)
+            raise RuntimeError(msg)
+
         table_row = parse_long_merp_output(stdout, stderr)
 
-        # add extra metadata here ...
-
-        for transform in ['baseline', 'filter']:
-            table_row.update({transform:  merp_cmds[transform]})
-
-        table_row.update({'merp_f': mcf})
-
-        with open(table_row['merp_f'], 'r') as f:
+        # snapshot MD5 of file measured ... 
+        with open(table_row['erpfile_s'], 'rb') as f:
             m = hashlib.md5()
-            m.update(f.read().encode('utf-8'))
-        table_row.update({'erp_md5': m.hexdigest()})
+            m.update(f.read())
+        table_row.update({'erp_md5_s': m.hexdigest()})
+
+        # add extra metadata here ... baseline
+        for transform in ['baseline_s']:
+            if transform in merp_cmds.keys():
+                table_row.update({transform:  merp_cmds[transform]})
+
+        table_row.update({'merpfile_s': mcf})
 
         table_rows.append(table_row)
     return(table_rows)
@@ -243,6 +252,8 @@ def parse_long_merp_output(data_bytes, err_bytes):
     Notes
     -----
 
+    * named regex capture groups define the row_dict keys
+
     * merp long form output has a bug that farts out an extra 4 char
       channel label on the first line. The reg exp takes the first four
       characters of the channel label field, dropping the last 4, if
@@ -250,93 +261,110 @@ def parse_long_merp_output(data_bytes, err_bytes):
 
     '''
 
-    # tabs aren't expected but strip anyway 
+    # tabs aren't expected but strip in case
     data = data_bytes.decode('utf-8').strip().replace('\t',' ')
+    err = err_bytes.decode('utf-8')
 
-    # soft error reports are 2 or more lines, just take the first 
-    err_regexp = re.compile(r'(?P<error>^.*)\n')
-    err = re.match(err_regexp, err_bytes.decode('utf-8'))
-    if err is None:
-        err = ''
-    else:
+    # if there is an error, first line is diagnostic
+    err_match = re.match(r'(?P<error>^.*)\n', err)
+    if err_match is not None:
         # squeeze extra whitespace 
-        err = re.sub('\s+', ' ', err['error'])
+        err = re.sub('\s+', ' ', err_match['error'])
 
-    # catch merp hard errors
-    if re.match('^$',data):
-        msg = 'No merp output: {0}'.format(err)
-        raise RuntimeError(msg)
+    # Define one regex pattern per output line for
+    # readibility/debugging
+
+    # line 1 work around double label merp bug
+    patt1 = ('^Channel\s+'
+             '(?P<chan_s>.{4})(?:.{4})*\s+Sum of\s+'
+             '(?P<epochs_d>\S+)')
+
+    # line 2 fixed length fields until the last. 
+    patt2 = ('^.+\n'
+             '(?P<subject_s>.{41})'
+             '(?P<binfo_s>.{40})'
+             '(?P<condition_s>.{41})'
+             '(?P<expt_s>.{40})'
+             '(?P<meas_specs_s>.*)'
+             '[\\\\n]*' )
+
+    # line 3 may not exist, e.g., on bad baseline error
+    patt3 = ('.+\n.+\n'
+             '(?P<meas_desc_s>.+?)'
+             '(?P<value_f>[\.\d]+)\s'
+             '(?P<units_s>\S+$)')
+
+    # scrape column names from the patterns and precompile
+    col_names, re_specs = [], []
+    for patt in [patt1, patt2, patt3]:
+        names = re.findall(r'\\?P<(.+?)>', patt)
+        col_names += names
+        re_specs.append( (names, re.compile(patt),) )
 
 
-    # ok, get to it ....
+    # init output dict to NA
+    row_dict = dict([ (col,'NA') for col in col_names ] )
 
-    # the values are set by eponymous regexp named capture groups
-    output_keys = ['chan', 'epochs_n', 'condition', 'expt', 'meas_desc',
-                   'value', 'units', 'subject', 'bin_n', 'bin_desc', 'meas_label',
-                   'chan_num', 'erp_f', 'win_start', 'win_stop', 'meas_args']
-    row_dict = dict([(k,'NA') for k in output_keys])
-
-    # line 1 channel label and trial count, work around double label merp bug
-    re1 = re.compile('^Channel\s+(?P<chan>.{4})(?:.{4})*\s+Sum of\s+(?P<epochs_n>\S+)')
-
-    # line 2 fixed length fields until the last 
-    re2 = re.compile( ('^.+\n(?P<subject>.{41})'
-                       '(?P<binfo>.{40})'
-                       '(?P<condition>.{41})'
-                       '(?P<expt>.{40})'
-                       '(?P<meas_specs>.*)[\\\\n]*' ))
-
-    # line 3 measurement info, may not exist, e.g., on bad baseline error
-    re3 = re.compile(r'.+\n.+\n(?P<meas_desc>.+?)(?P<value>[\.\d]+)\s(?P<units>\S+$)')
-
-    # None.groupdict() raises AttributeError if re.match fails
-
-    # rough chunk the string
-    for regex, matchlen in [ (re1,2), (re2,5), (re3,3) ]:
+    # First pass parse, override default 'NA' only on match
+    for names, regex  in re_specs:
         matches = None
         matches = regex.match(data)
-        if matches is not None and len(matches.groupdict()) == matchlen:
+        if matches is not None:
             row_dict.update(matches.groupdict())
 
-    # parse the 40 char bin info or die
-    bin_info = re.match('^\s*bin\s+(?P<bin_n>\d+)\s+(?P<bin_desc>.*)', 
-                         row_dict['binfo']).groupdict()
+    # parse the 40 char bin number and description chunk
+    bin_patt = ('^\s*bin\s+'
+                '(?P<bin_d>\d+)\s+'
+                '(?P<bin_desc_s>.*)')
+    bin_info = re.match(bin_patt, row_dict['binfo_s']).groupdict()
     assert len(bin_info) == 2
 
-    # parse the meas_specs string into, well, measurement specs
-    meas_regex = re.compile( ('(^(?P<meas_label>\w+)\s+(?P<bin_n2>\d+)\s'
-                              '(?P<chan_num>\d+)\s+(?P<erp_f>\S+)\s+'
-                              '(?P<win_start>\d+)\s+(?P<win_stop>\d+)\s+'
-                              '(?P<meas_args>.*$))') )
-    meas_specs = meas_regex.match(row_dict['meas_specs']).groupdict()
+    # parse the variable length meas_specs string
+    meas_regex = re.compile( ('^'
+                              '(?P<meas_label_s>\w+)\s+'
+                              '(?P<bin2_d>\d+)\s+'
+                              '(?P<chan_d>\d+)\s+'
+                              '(?P<erpfile_s>\S+)\s+'
+                              '(?P<win_start_f>\d+)\s+'
+                              '(?P<win_stop_f>\d+)\s*'
+                              '(?P<meas_args_s>.*)\s*' ))
+
+    meas_regex = re.compile('^'
+                            '(?P<meas_label_s>\w+)\s+'
+                            '(?P<bin2_d>\d+)\s+'
+                            '(?P<chan_d>\d+)\s+'
+                            '(?P<erpfile_s>\S+)\s+'
+                            '(?P<win_start_f>\d+)\s+'
+                            '(?P<win_stop_f>\d+)\s*'
+                            '(?P<meas_args_s>.*)' )
+
+    meas_specs = meas_regex.match(row_dict['meas_specs_s']).groupdict()
     assert len(meas_specs) == 7
 
     # add the new items
-    kvs = [(k,v) for d in [row_dict, bin_info, meas_specs] for k,v in d.items() ]
+    kvs = [(k,v) for d in [row_dict, bin_info, meas_specs] 
+           for k,v in d.items() ]
     for k,v in kvs:
         row_dict[k] = v.strip()
 
     # sanity checks ... 
-    assert row_dict['bin_n'] == row_dict['bin_n2']
+    assert row_dict['bin_d'] == row_dict['bin2_d']
 
-    # these were parsed, drop the strings 
-    del(row_dict['bin_n2'])
-    del(row_dict['binfo'])
-    del(row_dict['meas_specs'])
-
-    # finally 
-    assert set(row_dict.keys()) == set(output_keys)
+    # drop the redundant bin and parsed chunks
+    del(row_dict['bin2_d'])
+    del(row_dict['binfo_s'])
+    del(row_dict['meas_specs_s'])
 
     # handle missing data
     if re.match('.+',err):
-        row_dict['value'] = 'NA'
-        row_dict['error'] = err
+        row_dict['value_f'] = 'NA'
+        row_dict['merp_error_s'] = err
     else:
-        row_dict['error'] = 'NA'
+        row_dict['merp_error_s'] = 'NA'
 
-    # float, ints and fails on unconvertable str
-    if row_dict['value'] != 'NA':
-        assert type(float(row_dict['value'])) is float
+    # check measured value is convertible to numeric
+    if row_dict['value_f'] != 'NA':
+        float(row_dict['value_f'])
 
     return(row_dict)
 

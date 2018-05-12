@@ -1,3 +1,2 @@
-file calstest.x.avg
-baseline -100 0
-lpka 1 22 calstest.x.avg 254 260 + 3
+file calstest.x.nrm
+meana 1 1 calstest.x.nrm 200 400
