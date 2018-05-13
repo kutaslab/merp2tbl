@@ -1,7 +1,7 @@
+#!/usr/bin/env python
+
 '''
 format long form merp text output as rows x columns or YAML document
-
-based on merp2R.pl, T. Urbach 08/25/08
 '''
 
 import subprocess
@@ -137,14 +137,14 @@ def parse_merpfile(merpfile):
 
     return(cmd_dict)
 
-def format_output(results, format='tsv', out_keys=None):
+def format_output(results, format=None, out_keys=None):
     '''dump merp output to stdout in specified format
 
     Parameters
     ----------
     results : list of dict
         as returned by merp2tbl.run_merp()
-    format : str ('tsv', 'yaml')
+    format : str ('tsv') 'yaml'
         specifies tab-separated rows x columns or yaml doc output
     out_keys : list of str
         whitelist of column names to report
@@ -173,6 +173,8 @@ def format_output(results, format='tsv', out_keys=None):
             val = spec_map[key_spec['spec']](val_str) # coerce string to float or int
         return key, val
 
+    if format is None:
+        format = 'tsv'
     assert format in ['tsv', 'yaml']
 
     # handle the output column filter 
@@ -185,8 +187,9 @@ def format_output(results, format='tsv', out_keys=None):
 
     if format == 'tsv':
         # tab separate with header 
-        header = '\t'.join(out_keys) + '\n'
-        data = '\n'.join(['\t'.join([str(v) for v in r.values()]) for r in out_results])
+        cols = out_results[0].keys()
+        header = '\t'.join(cols) + '\n'
+        data = '\n'.join(['\t'.join([str(r[c]) for c in cols]) for r in out_results])
         output = header + data
 
     if format == 'yaml':
@@ -460,4 +463,25 @@ def parse_long_merp_output(data_bytes, err_bytes):
 
     return(row_dict)
 
+
+if __name__ == '__main__':
+
+    import argparse  # successor to optparse
+
+    # set up parser
+    parser = argparse.ArgumentParser(description='convert verbose merp output to regular data') 
+
+    # names 
+    parser.add_argument("mcf", type=str, help="merp command file")
+    parser.add_argument("--format", type=str, metavar='', 
+                        dest="format", help="<tsv|yaml> for tab-separated or yaml output")
+
+    args_dict = vars(parser.parse_args()) # fetch from sys.argv
+    if args_dict['format'] is not None:
+        format = args_dict['format']
+    else:
+        format = 'tsv'
+
+    result = run_merp(args_dict['mcf'])
+    format_output(result, format=format)
 
