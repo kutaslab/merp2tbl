@@ -13,14 +13,12 @@ Output options
 
 import subprocess
 import re
-import pdb
 import os.path
-import yaml
 import hashlib
 
+import yaml
 from yamllint import linter
 from yamllint.config import YamlLintConfig
-import pprint as pp
 
 # master list of merp measures except pkla which pkla which dumps
 # 2 lines of data and is buggy wrt to soft errors
@@ -332,7 +330,7 @@ def parse_long_merp_output(data_bytes, err_bytes):
     err_match = re.match(r'(?P<error>^.*)\n', err)
     if err_match is not None:
         # squeeze extra whitespace 
-        err = re.sub('\s+', ' ', err_match['error'])
+        err = re.sub('\s+', ' ', err_match.groupdict()['error'])
 
     # Define one regex pattern per output line for
     # readibility/debugging
@@ -450,16 +448,16 @@ def format_output(results, format='tsv', out_keys=None, tag_file=None):
 
         # parse key_fmt
         key_spec = re.match('^(?P<key>.*)_(?P<spec>[fds])$', key_fmt)
-        assert key_spec['spec'] in spec_map.keys()
+        assert key_spec.groupdict()['spec'] in spec_map.keys()
 
-        key = key_spec['key'] # == key_fmt stripped of '_fmt'
+        key = key_spec.groupdict()['key'] # == key_fmt stripped of '_fmt'
 
         # strings including NA don't need conversion
-        if key_spec['spec'] == 's' or val_str == 'NA':
+        if key_spec.groupdict()['spec'] == 's' or val_str == 'NA':
             val = val_str
         else: 
             # coerce string to float or int
-            val = spec_map[key_spec['spec']](val_str)
+            val = spec_map[key_spec.groupdict()['spec']](val_str)
         return key, val
 
     # set the output data types 

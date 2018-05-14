@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 
+import pytest
+import subprocess
 import os
 import os.path
 import glob
-import pprint as pp
-import pytest
-import pdb
 import re
-import subprocess
 
 import merp2tbl 
 
