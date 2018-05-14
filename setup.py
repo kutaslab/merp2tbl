@@ -1,6 +1,6 @@
 # to install in development mode, from this directory run
 # 
-#     pip uninstall eegr
+#     pip uninstall merp2tbl
 #     python ./setup.py build_ext --inplace
 #     python ./setup.py develop -d ~/.local/lib/python3.6/site-packages/
 #

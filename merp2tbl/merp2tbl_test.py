@@ -19,6 +19,7 @@ softerror_mcfs = glob.glob('*softerror*.mcf')
 harderror_mcfs = glob.glob('*harderror*.mcf')
 
 def test_minimal_good():
+
     mcf = 'test_minimal_good.mcf'
     merp_cmds = merp2tbl.parse_merpfile(mcf)
     result = merp2tbl.run_merp(mcf)
@@ -81,10 +82,10 @@ def test_merp2tbl_output_format():
 def test_select_columns():
     ''' test column slicer for subsetting output '''
     for mcf in good_mcfs + softerror_mcfs:
-        result = merp2tbl.run_merp(mcf)
 
+        result = merp2tbl.run_merp(mcf)
         n_cols = len(result[0].keys())
-        col_names = [k for k in result[0].keys()]
+        col_names = [re.sub('_[dfs]$', '', k) for k in result[0].keys()]
         assert n_cols >= 2
 
         # select even and odd colums = 2 subsets that cover all columns
