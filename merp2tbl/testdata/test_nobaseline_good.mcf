@@ -1,0 +1,11 @@
+file calstest.x.nrm  # filenames here
+file calstest.x.avg
+
+#  supress baseline
+nobaseline
+
+channels 17 21 22
+meana 1 $ * 200 400
+
+
+

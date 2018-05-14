@@ -1,0 +1,6 @@
+merp2tbl
+python>=3.5
+pyyaml>=3.12
+yamllint>=1.11
+pytest>=3.3
+pytest-benchmark>=3.1

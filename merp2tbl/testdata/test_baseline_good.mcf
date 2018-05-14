@@ -1,0 +1,11 @@
+file calstest.x.nrm
+file calstest.x.avg
+
+baseline -100 0
+
+channels 15 21 22
+
+meana 1 $ * 200 400
+fal 1 $ * 250 400 + .5
+
+

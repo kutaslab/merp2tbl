@@ -1,0 +1,53 @@
+# to validate a YAML file on linux run
+#
+# > yamllint filename.yml
+#
+# and edit the text until the error messages are gone
+
+---
+# singleton tags broadcast automatically to all measurements
+
+task_tag: pict mem
+
+filter_tag: low pass 15
+
+baseline_tag: merp default
+
+experimenter_id: 17
+
+# tag sequences length > 1 must align 1-1 exactly with merp
+# measurments in order.
+
+# YAML is very picky about spaces and indentation, line breaks are OK
+
+wide_row_tag:
+  [tagA, tagB, tagC, tagD, tagE, tagF, tagG, tagH, tagI, tagJ,
+   tagK, tagL, tagM, tagN, tagO, tagP, tagQ, tagR, tagS, tagT,
+   tagU, tagV, tagW, tagX]
+
+# long form YAML without square brackets, each item on a line
+long_row_tag:
+  - tagA
+  - tagB
+  - tagC
+  - tagD
+  - tagE
+  - tagF
+  - tagG
+  - tagH
+  - tagI
+  - tagJ
+  - tagK
+  - tagL
+  - tagM
+  - tagN
+  - tagO
+  - tagP
+  - tagQ
+  - tagR
+  - tagS
+  - tagT
+  - tagU
+  - tagV
+  - tagW
+  - tagX
