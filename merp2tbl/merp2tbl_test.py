@@ -60,6 +60,7 @@ def test_validate_merp2tbl():
 
         # if no merp error, check all values, else just the non-NAs
         if proc_res.stderr.decode('utf-8') == '':
+            assert len(merp_vals) == len(merp2tbl_vals)
             assert merp_vals == merp2tbl_vals
         else:
             assert all([merp_vals[i] == merp2tbl_vals[i]

@@ -15,6 +15,7 @@ import subprocess
 import re
 import os.path
 import hashlib
+import pprint as pp
 
 import yaml
 from yamllint import linter
@@ -66,11 +67,49 @@ def parse_merpfile(merpfile):
     Notes
     ------
 
-    * channels, baseline, and nobaseline specs are supported
+    * channels, baseline, and nobaseline are supported
 
-    * filter command is not supported by design
+    * filter command line argument is not supported
 
     * some variant forms of merp command files are not supported
+
+    * Native merp command processing is procedural, mixing optional
+      command line arguments with an embedded baseline command,
+      wildcard filename and channel expansion.
+
+      This constructs a list of dicts, each dict containing the file
+      and channel lists.
+
+      To reconstruct the merp test output in canonical merp order,
+      expand the list of dicts, channels and files like so
+
+        for each dict in list:
+          for each chan in chan list
+             for file in file list 
+
+    * Construction of the list of dicts is governed by the
+      state table, see comments.
+    
+      States 
+  
+      0 = start
+      1 = file update
+      2 = baseline, channel update
+      3 = measure update
+      4 = error
+
+      state table: 
+
+      (cmd_spec, from_state) -> to_state
+
+                            from_state
+                     -------------------
+      cmd_spec[0] |  0   1   2   3  4(Error)
+      ----------------------------------
+          file    |  1   1   1   3  -
+      channels    |  4   2   2   2  -
+      baseline    |  4   2   2   2  -
+      <measure>   |  4   3   3   3  -
 
     Usage
     -----
@@ -88,10 +127,10 @@ def parse_merpfile(merpfile):
     # baseline start stop or nobaseline is optional 
     baseline start_n stop_n
 
-    # at least one test is mandatory
-    test ...
-    test ...
-    test ...
+    # at least one measure is mandatory
+    measure ...
+    measure ...
+    measure ...
     ```
 
     '''
@@ -108,65 +147,92 @@ def parse_merpfile(merpfile):
     # cleanup trailing comments
     merp_cmds = [re.sub('\s+#.+$', '', m).strip() for m in merp_cmds]
 
-    cmd_dict = dict(files='NA', channels='NA', baseline='NA', tests='NA')
-
-    # 0 = start,
-    # 1 = loading files,
-    # 2 = loading chans, baseline, order doesn't matter
-    # 3 = loading tests
-
     # whitelist commands we can handle
     implemented_cmds = ['file', 'channels'] + transforms + merp_catalog
-    parse_phase = 0 # start
-    for cmd in merp_cmds:
-        cmd_spec = cmd.split(' ')
+
+    # merp_cmds is a list of cmd_docs, each doc is a dict of 
+    # file, baseline, channel, measure key:values
+
+    cmd_dict = dict(files=[], channels='NA', baseline_s='NA', measures=[])
+    cmd_list = [] 
+
+    # state_table[state_key][from_state] -> next state
+    state_table = dict(
+        file =     [1, 1, 1, 1],
+        channels = [4, 2, 2, 2],
+        baseline = [4, 2, 2, 2],
+        measure =  [4, 3, 3, 3])
+
+    from_state = 0 # initial state
+
+    for cmd_str in merp_cmds:
+
+        if from_state == 4:
+        # something bad happened
+            raise ValueError('merp file command out of order?' + cmd)
+
+        # split the command and process ...
+        cmd_spec = cmd_str.split(' ')
         if cmd_spec[0] not in implemented_cmds:
             msg = 'merpfile: {0} line: {1}\n'.format(merpfile,cmd)
             msg += pp.pformat('choose from: ' + ' '.join(implemented_cmds))
             raise NotImplementedError(msg)
 
-        # handle files ... these must come first
-        if cmd_spec[0] == 'file':
-            if not parse_phase <= 1:
-                raise ValueError('file command out of order: ' + cmd)
+        cmd = cmd_spec[0] # first field of merp command
+        if cmd == 'file':
+            state_key = 'file'
+            if from_state in [0, 2]:
+                # start a new comand dict and set the first file
+                # Note: state 2 is after channels/baseline before
+                # measurement so amounts to a reset
+                curr_dict = dict([(k,v) for k,v in cmd_dict.items()])
+                curr_dict['files'] = [cmd_spec[1]] # reset
 
-            parse_phase = 1
-            assert len(cmd_spec) == 2
-            if cmd_dict['files'] is 'NA':
-                cmd_dict['files'] = [ cmd_spec[1] ]
+            elif from_state == 1: 
+                # collecting files
+                curr_dict['files'].append(cmd_spec[1]) # append
+
+            elif from_state == 3:
+                # state 3 is after a measure command, so push the current
+                # command dict and start a new one
+                cmd_list.append(curr_dict)
+                curr_dict = dict([(k,v) for k,v in cmd_dict.items()])
+                curr_dict['files'] = [cmd_spec[1]] # reset
+
+        # handle channels
+        if cmd == 'channels':
+            state_key = 'channels'
+            if from_state == 0:
+                raise ValueError('file command out of order: ' + cmd_str)
             else:
-                cmd_dict['files'].append(cmd_spec[1])
-
-        # handle chans and/or baseline
-        if cmd_spec[0] in ['channels'] + transforms:
-            if parse_phase not in [1,2]:
-                raise ValueError('command out of order: ' + cmd)
-
-            parse_phase = 2
-            if cmd_spec[0] == 'channels':
                 chan_ids = [int(c) for c in cmd_spec[1:]]
                 assert all([0 <= c and c <= 64] for c in chan_ids)
-                cmd_dict['channels'] = chan_ids
+                curr_dict['channels'] = chan_ids
 
-            elif cmd_spec[0] == 'baseline':
-                cmd_dict['baseline_s'] = cmd
-
-            elif cmd_spec[0] == 'nobaseline':
-                cmd_dict['baseline_s'] = cmd_spec[0]
-
+        # handle baselines
+        if cmd in ['baseline', 'nobaseline']:
+            state_key = 'baseline'
+            if from_state == 0:
+                raise ValueError('file command out of order: ' + cmd_str)
             else:
-                raise ValueError('uh oh ... ' + cmd_spec)
+                curr_dict['baseline_s'] = cmd_str
 
-        # handle tests
-        if cmd_spec[0] in merp_catalog:
-            parse_phase = 3 # loading tests
+        # measurements
+        if cmd in merp_catalog:
+            state_key = 'measure'
+            if from_state == 0:
+                raise ValueError('file command out of order: ' + cmd_str)
+            elif from_state == 1:
+                curr_dict['measures'] = [cmd_str]
+            elif from_state in [2, 3]:
+                curr_dict['measures'].append(cmd_str)
 
-            if cmd_dict['tests'] is 'NA':
-                cmd_dict['tests'] = [cmd]
-            else:
-                cmd_dict['tests'].append(cmd)
+        # transition
+        from_state = state_table[state_key][from_state]
 
-    return(cmd_dict)
+    # push the work in progress on the way out 
+    cmd_list.append(curr_dict)
+    return(cmd_list)
 
 
 def run_merp(mcf):
@@ -187,7 +253,7 @@ def run_merp(mcf):
     -----
 
     * merp commands with file or channel wildcards are expanded into
-      individual tests and run through merp one at a time to capture
+      individual measures and run through merp one at a time to capture
       stdout and stderr output for the specific test.
 
     * in the results dicts from the merp output all the values are
@@ -205,56 +271,60 @@ def run_merp(mcf):
     all_tests = []  # minimal merp commands to run one test
 
     # fetch the merp command file
-    merp_cmds = parse_merpfile(mcf)
+    merp_cmds_list = parse_merpfile(mcf)
+    # print('merpfile ', mcf)
+    # pp.pprint(merp_cmds_list)
 
     # unpack the wildcards, if any, into individual commands
     test_params = ['measure', 'bin', 'chanspec', 'filespec']
 
-    for test_str in merp_cmds['tests']:
-        # test format 
-        # name bin filespec chanspec arg0 ... argN
-        test = test_str.split()
-        test_specs = dict()
-        for i,k in enumerate(test_params):
-            test_specs[k] = test[i]
+    for merp_cmds in merp_cmds_list:
+        for test_str in merp_cmds['measures']:
+            # test format 
+            # name bin filespec chanspec arg0 ... argN
+            test = test_str.split()
+            test_specs = dict()
+            for i,k in enumerate(test_params):
+                test_specs[k] = test[i]
 
-        test_specs = dict([*zip(test_params, test[slice(0,len(test_params))])])
+            test_specs = dict([*zip(test_params, test[slice(0,len(test_params))])])
 
-        # handle the arguments
-        test_specs['argspec'] = test[len(test_params):]
+            # handle the arguments
+            test_specs['argspec'] = test[len(test_params):]
 
-        # expand file wild card if any
-        if test_specs['filespec'] == '*':
-            test_specs['filespec'] = merp_cmds['files']
-        else:
-            test_specs['filespec'] = [ test_specs['filespec'] ]
+            # expand file wild card if any
+            if test_specs['filespec'] == '*':
+                test_specs['filespec'] = merp_cmds['files']
+            else:
+                test_specs['filespec'] = [ test_specs['filespec'] ]
 
-        # expand channel wildcard if any 
-        if test_specs['chanspec'] == '$':
-            test_specs['chanspec'] = merp_cmds['channels']
-        else:
-            test_specs['chanspec'] = list(test_specs['chanspec'])
+            # expand channel wildcard if any 
+            if test_specs['chanspec'] == '$':
+                test_specs['chanspec'] = merp_cmds['channels']
+            else:
+                test_specs['chanspec'] = list(test_specs['chanspec'])
 
-        for chan in test_specs['chanspec']:
-            for erpfile in test_specs['filespec']:
+            for chan in test_specs['chanspec']:
+                for erpfile in test_specs['filespec']:
 
-                # build the file, baseline, and optional filter lines
-                this_file_lines = 'file {0}\n'.format(erpfile)
+                    # build the file, baseline, and optional filter lines
+                    this_file_lines = 'file {0}\n'.format(erpfile)
 
-                if 'baseline_s' in merp_cmds.keys():
-                    this_file_lines += '{0}\n'.format(merp_cmds['baseline_s'])
+                    if ('baseline_s' in merp_cmds.keys() and 
+                        merp_cmds['baseline_s'] is not 'NA'):
+                        this_file_lines += '{0}\n'.format(merp_cmds['baseline_s'])
 
-                # set the measurement and params
-                this_test_spec = ' '.join([
-                    test_specs['measure'], 
-                    str(test_specs['bin']),
-                    str(chan),
-                    erpfile, 
-                    *test_specs['argspec']])
+                    # set the measurement and params
+                    this_test_spec = ' '.join([
+                        test_specs['measure'], 
+                        str(test_specs['bin']),
+                        str(chan),
+                        erpfile, 
+                        *test_specs['argspec']])
 
-                # update the list of tests
-                this_file_lines += '{0}\n'.format(this_test_spec)
-                all_tests.append(this_file_lines)
+                    # update the list of measures
+                    this_file_lines += '{0}\n'.format(this_test_spec)
+                    all_tests.append(this_file_lines)
 
     # run merp
     for test in all_tests:
@@ -269,7 +339,6 @@ def run_merp(mcf):
 
         # catch merp hard errors with no data
         if re.match('^$',stdout.decode('utf-8')):
-            pdb.set_trace()
             msg = 'No merp output: {0}'.format(stderr.decode('utf-8'))
             msg += 'merpfile: {0}: '.format(mcf)
             msg += pp.pformat(test)
