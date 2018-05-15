@@ -16,6 +16,7 @@ import re
 import os.path
 import hashlib
 import pprint as pp
+import warnings
 
 import yaml
 from yamllint import linter
@@ -274,7 +275,7 @@ def parse_merpfile(merpfile):
     return(cmd_list)
 
 def run_merp(mcf,debug=False):
-    '''wrapper parses command file mcf, runs the measurements one test at a time via merp - < .tmp
+    '''wrapper parses command file mcf, runs the measurements one test at a time via  merp - stdin
 
     Parameters
     ----------
@@ -286,7 +287,7 @@ def run_merp(mcf,debug=False):
     Returns
     -------
     measurements : list of dict
-        each dict is the parsed long form merp output of one test
+        each dict is parsed long form merp output of one measurement, ready to format
 
     Notes
     -----
@@ -323,13 +324,11 @@ def run_merp(mcf,debug=False):
     for merp_cmds in merp_cmds_list:
         cmd_str = None
 
-        # build the single measure file lines, drop baseline if 'NA'
+        # build the single measure file lines, except baseline if 'default'
         cmd_str = '\n'.join([cmd for cmd in merp_cmds if cmd is not 'default'])
         cmd_str += '\n'
-        with open('.tmp', 'w') as f:
-            f.write(cmd_str)
 
-        # file_proc = subprocess.Popen(['cat', '.tmp'], stdout=subprocess.PIPE)
+        # run it 
         file_proc = subprocess.Popen(['echo', cmd_str], stdout=subprocess.PIPE)
         merp_proc = subprocess.Popen(['merp', '-'], stdin = file_proc.stdout, 
                                      stdout=subprocess.PIPE, 
@@ -343,6 +342,7 @@ def run_merp(mcf,debug=False):
             msg += pp.pformat(cmd_str)
             raise RuntimeError(msg)
 
+        # parse the output 
         measurement = parse_long_merp_output(stdout, stderr)
 
         # snapshot MD5 of file measured ... 
@@ -352,7 +352,7 @@ def run_merp(mcf,debug=False):
         measurement.update({'erp_md5_s': m.hexdigest()})
 
         # log baseline
-        if merp_cmds[1] == 'NA':
+        if merp_cmds[1] == 'default':
             measurement.update({'baseline_s': 'default'})
         else:
             measurement.update({'baseline_s': merp_cmds[1]})
@@ -489,13 +489,15 @@ def parse_long_merp_output(data_bytes, err_bytes):
 
     return(row_dict)
 
-def format_output(results, format='tsv', out_keys=None, tag_file=None):
+def format_output(results, mcf, format='tsv', out_keys=None, tag_file=None):
     '''dump merp output to stdout in specified format
 
     Parameters
     ----------
     results : list of dict
         as returned by merp2tbl.run_merp()
+    mcf : str
+        path to merp file the output come from for data validation
     format : str ('tsv'), 'yaml' 
         specifies tab-separated rows x columns or yaml doc output
     out_keys : list of str
@@ -585,8 +587,88 @@ def format_output(results, format='tsv', out_keys=None, tag_file=None):
                            default_flow_style=False,
                            canonical=False)
 
-    print(output)
+    # sanity check 0 == good, >0 == warnings, <0 == fail
+    vo,msg = validate_output(output, format, mcf) 
+    if vo < 0:
+        raise RuntimeError(msg)
+    elif 0 < vo:
+        warnings.warn(msg)
 
+    return(output)
+
+def validate_output(output, format, mcf):
+    '''compare values in merp2tbl output with merp -d row for row, non-NA must agree
+    
+    Parameters
+    ----------
+    output : dict
+       as returned by format_output
+    format : str
+       'tsv' or 'yaml'
+    mcf : str
+       path to merp command file
+
+    Returns
+    -------
+      rval, msg : 2-ple of int, str
+        rval 0 = success, positive = warning, negative = fail 
+        msg = brief explanation
+    '''
+    merp2tbl_vals = []
+    if format=='yaml':
+        for out in yaml.load(output):
+            if 'value' in out.keys():
+                merp2tbl_vals.append(out['value'])    
+            else:
+                msg = 'yaml value key not found, cannot validate data'
+                return(1,msg)
+
+    elif format=='tsv':
+        out_lines = output.split('\n')
+        header = out_lines[0].split('\t')
+        value_idx = None
+        try:
+            value_idx = header.index('value')
+        except:
+            msg =  'tsv value column not found, cannot validate data'
+            return(2,msg)
+
+        if value_idx is not None:
+            merp2tbl_vals = [out_line.split('\t')[value_idx] for out_line in out_lines[1:]]
+            merp2tbl_vals = [v if v == 'NA' else float(v) for v in merp2tbl_vals]
+    else:
+        raise ValueError('unknown format: ', format)
+
+    if merp2tbl_vals == []:
+        msg = 'no merp2tbl values not found, cannot validate data'
+        return(1,msg)
+        
+    # run merp -d and slurp values 
+    proc_res = subprocess.run(['merp', '-d', mcf], 
+                              stdout=subprocess.PIPE, 
+                              stderr=subprocess.PIPE)
+
+    merp_vals = [float(v) for v in proc_res.stdout.decode('utf-8').split('\n') 
+                 if len(v.strip()) > 0]
+
+    # length mismatch
+    if len(merp_vals) != len(merp2tbl_vals):
+        msg = 'merp2tbl ' + mcf + 'output value length mismatch'
+        return(-1)
+
+    # if no merp error, check all values, else just the non-NAs
+    if proc_res.stderr.decode('utf-8') == '':
+        if merp_vals != merp2tbl_vals:
+            msg = 'merp2tbl ' + mcf + ' output value mismatch, no softerrors'
+            return(-2, msg)
+    else:
+        if not all([merp_vals[i] == merp2tbl_vals[i]
+                    for i,v in enumerate(merp2tbl_vals) if v != 'NA']):
+            msg = 'merp2tbl ' + mcf + ' output value non-NA mismatch, some softerrors'
+            return(-3, msg)
+    return(0, '')
+
+        
 
 if __name__ == '__main__':
     import argparse  # successor to optparse
@@ -625,8 +707,12 @@ if __name__ == '__main__':
     args_dict = vars(parser.parse_args()) # fetch from sys.argv
 
     result = run_merp(args_dict['mcf'], args_dict['debug'])
-    format_output(result,
-                  format=args_dict['format'], 
-                  out_keys = args_dict['columns'],
-                  tag_file = args_dict['tagf'])
+
+    # validation built into formatter
+    formatted = format_output(result,
+                              args_dict['mcf'],
+                              format=args_dict['format'], 
+                              out_keys = args_dict['columns'],
+                              tag_file = args_dict['tagf'])
+    print(formatted)
 
