@@ -21,6 +21,8 @@ import yaml
 from yamllint import linter
 from yamllint.config import YamlLintConfig
 
+import pdb
+
 # master list of merp measures except pkla which pkla which dumps
 # 2 lines of data and is buggy wrt to soft errors
 
@@ -91,49 +93,57 @@ def parse_merpfile(merpfile):
       state table, write out the node-arc FSA graph to see
       how it works.
     
-      States 
+      States: 
   
-      0 = start
-      1 = init/append file list
-      2 = set/reset baseline, channel
-      3 = init/append measure
-      4 = error
+      0 = -files, -channels (start, all measures fail)
+      1 = -files, +channels (all measures fail)
+      2 = +files, -channels (explicit chan measures OK, chan $ fails)
+      3 = +files, +channels (all measures OK)
+      4 = error (no files)
+      5 = error (no wild channels)
 
-      state table: 
+      Transitions:
 
       (cmd, from_state) -> to_state
 
-                       from_state
-                  -------------------
-          cmd     |  0   1   2   3  4(Error)
-      ----------------------------------
-          file    |  1   1   1   3  -
-      channels    |  4   2   2   2  -
-      baseline    |  4   2   2   2  -
-      <measure>   |  4   3   3   3  -
+                        from_state
+                     ----------------
+          cmd        |  0   1   2  3
+      -------------------------------
+          file       |  2   3   2  3 
+      channels       |  1   1   3  3
+      baseline       |  0   1   2  3
+      measure chan   |  4   4   2  3
+      measure $      |  4   4   5  3
 
     Usage
     -----
 
     See merp docs for merp command file format.
 
-    Files and channels may be reset, each measure command uses
-    whatever the current value of file(s), channels.
+    At least one file is mandatory before a measurement is made
 
-    Not sure about baseline
+    merp's algorithm (probably)
+
+    The list of files accumulates across the file. Baseline and
+    channels are set when encountered. Wild cards expand current lists
+    and apply current baseline when the measurement command is
+    encountered.
+
 
     ```
-    # at least one file is mandatory
+    # typical 
+
     file ...
     file ...
 
-    # channels is optional
+    # wild channels, required for $ expansion 
     channels ...
 
     # baseline start stop or nobaseline is optional 
+    # default is avg preampling 
     baseline start_n stop_n
 
-    # at least one measure is mandatory
     measure ...
     measure ...
     measure ...
@@ -165,18 +175,30 @@ def parse_merpfile(merpfile):
 
     # state_table[state_key][from_state] -> next state
     state_table = dict(
-        file =     [1, 1, 1, 1],
-        channels = [4, 2, 2, 2],
-        baseline = [4, 2, 2, 2],
-        measure =  [4, 3, 3, 3])
+        file =            [2, 3, 2, 3],
+        channels =        [1, 1, 3, 3],
+        baseline =        [0, 1, 2, 3],
+        meas_ltrl_chan =  [4, 4, 2, 3],
+        meas_wild_chan =  [4, 4, 5, 3],
+    )
 
     from_state = 0 # initial state
 
+    # list of minimal merp command 3-ples
+    # (fileame, 
+    #  baseline_spec=(None, "baseline start stop", "nobaseline", measure_spec),
+    # measure literal chan, file) 
+
+    cmd_list = []   # 
+    files = []      # for wildcard expansion, accumulate all files
+    channels = []   # for wildcard expansion, set/reset when encountered 
+    baseline = 'default' # if not overwritten, merp2tbl falls back to merp prestim default
+
     for cmd_str in merp_cmds:
 
-        if from_state == 4:
+        if from_state ==  6:
         # something bad happened
-            raise ValueError('merp file command out of order?' + cmd)
+            raise ValueError('uh oh ... ', cmd_str)
 
         # split the command and process ...
         cmd_spec = cmd_str.split(' ')
@@ -186,64 +208,73 @@ def parse_merpfile(merpfile):
             raise NotImplementedError(msg)
 
         cmd = cmd_spec[0] # first field of merp command
+
+        # handle file
         if cmd == 'file':
             state_key = 'file'
-            if from_state in [0, 2]:
-                # start a new comand dict and set the first file
-                # Note: state 2 is after channels/baseline before
-                # measurement so amounts to a reset
-                curr_dict = dict([(k,v) for k,v in cmd_dict.items()])
-                curr_dict['files'] = [cmd_spec[1]] # reset
+            files.append(cmd_spec[1])
 
-            elif from_state == 1: 
-                # collecting files
-                curr_dict['files'].append(cmd_spec[1]) # append
-
-            elif from_state == 3:
-                # state 3 is after a measure command, so push the current
-                # command dict and start a new one
-                cmd_list.append(curr_dict)
-                curr_dict = dict([(k,v) for k,v in cmd_dict.items()])
-                curr_dict['files'] = [cmd_spec[1]] # reset
-
-        # handle channels
+        # always set channels
         if cmd == 'channels':
             state_key = 'channels'
-            if from_state == 0:
-                raise ValueError('file command out of order: ' + cmd_str)
-            else:
-                chan_ids = [int(c) for c in cmd_spec[1:]]
-                assert all([0 <= c and c <= 64] for c in chan_ids)
-                curr_dict['channels'] = chan_ids
+            channels = [int(c) for c in cmd_spec[1:]]
+            assert all([0 <= c and c <= 64] for c in channels)
 
         # handle baselines
         if cmd in ['baseline', 'nobaseline']:
             state_key = 'baseline'
-            if from_state == 0:
-                raise ValueError('file command out of order: ' + cmd_str)
-            else:
-                curr_dict['baseline_s'] = cmd_str
+            baseline = cmd_str
 
-        # measurements
+        # parse measurement string
         if cmd in merp_catalog:
-            state_key = 'measure'
-            if from_state == 0:
-                raise ValueError('file command out of order: ' + cmd_str)
-            elif from_state in [1, 2]:
-                # first measure this file block
-                curr_dict['measures'] = [cmd_str]
-            elif from_state == 3:
-                curr_dict['measures'].append(cmd_str)
+            meas_patt = ('^\s*'
+                         '(?P<measure>\S+)\s+'
+                         '(?P<bin>\d+)\s+'
+                         '(?P<chan>\S+)\s+'
+                         '(?P<file>\S+)\s+'
+                         '(?P<args>.*)\s*$' )
+            
+            meas_match = re.match(meas_patt, cmd_str)
+            assert meas_match is not None
+            meas_cmd = meas_match.groupdict()
 
-        # transition
-        from_state = state_table[state_key][from_state]
 
-    # push the work in progress on the way out 
-    cmd_list.append(curr_dict)
+            # four cases +/- chan wildcard, +/- file wildcard
+            if meas_cmd['chan'] == '$':
+                for c in channels:
+                    if meas_cmd['file'] == '*':
+                        for f in files:
+                            # build and append the 3-ple
+                            cmd_list.append((
+                                'file ' + f,
+                                baseline,re.sub(r'\$', str(c), 
+                                                re.sub(r'\*', f, cmd_str)),))
+                    else:
+                        cmd_list.append(
+                            # build and append the 3-ple
+                            ('file ' + meas_cmd['file'],
+                             baseline,
+                             re.sub(r'\$', str(c), cmd_str), )
+                            )
+            else:
+                if meas_cmd['file'] == '*':
+                    for f in files:
+                        # build and append the 3-ple
+                        cmd_list.append(
+                            ('file ' + f,
+                             baseline,
+                             re.sub(r'\*', f, cmd_str)
+                         ))
+                else:
+                    # build and append the 3-ple
+                    cmd_list.append(
+                        ('file ' + meas_cmd['file'],
+                         baseline,
+                         cmd_str ) )
     return(cmd_list)
 
 def run_merp(mcf,debug=False):
-    '''wrapper parses command file mcf, runs one test at a time via merp - < .tmp
+    '''wrapper parses command file mcf, runs the measurements one test at a time via merp - < .tmp
 
     Parameters
     ----------
@@ -290,57 +321,13 @@ def run_merp(mcf,debug=False):
     test_params = ['measure', 'bin', 'chanspec', 'filespec']
 
     for merp_cmds in merp_cmds_list:
-        for test_str in merp_cmds['measures']:
-            # test format 
-            # name bin filespec chanspec arg0 ... argN
-            test = test_str.split()
-            test_specs = dict()
-            for i,k in enumerate(test_params):
-                test_specs[k] = test[i]
+        cmd_str = None
 
-            test_specs = dict([*zip(test_params, test[slice(0,len(test_params))])])
-
-            # handle the arguments
-            test_specs['argspec'] = test[len(test_params):]
-
-            # expand file wild card if any
-            if test_specs['filespec'] == '*':
-                test_specs['filespec'] = merp_cmds['files']
-            else:
-                test_specs['filespec'] = [ test_specs['filespec'] ]
-
-            # expand channel wildcard if any 
-            if test_specs['chanspec'] == '$':
-                test_specs['chanspec'] = merp_cmds['channels']
-            else:
-                test_specs['chanspec'] = list(test_specs['chanspec'])
-
-            for chan in test_specs['chanspec']:
-                for erpfile in test_specs['filespec']:
-
-                    # build the file, baseline, and optional filter lines
-                    this_file_lines = 'file {0}\n'.format(erpfile)
-
-                    if ('baseline_s' in merp_cmds.keys() and 
-                        merp_cmds['baseline_s'] is not 'NA'):
-                        this_file_lines += '{0}\n'.format(merp_cmds['baseline_s'])
-
-                    # set the measurement and params
-                    this_test_spec = ' '.join([
-                        test_specs['measure'], 
-                        str(test_specs['bin']),
-                        str(chan),
-                        erpfile, 
-                        *test_specs['argspec']])
-
-                    # update the list of measures
-                    this_file_lines += '{0}\n'.format(this_test_spec)
-                    all_tests.append(this_file_lines)
-
-    # run merp
-    for test in all_tests:
+        # build the single measure file lines, drop baseline if 'NA'
+        cmd_str = '\n'.join([cmd for cmd in merp_cmds if cmd is not 'default'])
+        cmd_str += '\n'
         with open('.tmp', 'w') as f:
-            f.write(test)
+            f.write(cmd_str)
 
         file_proc = subprocess.Popen(['cat', '.tmp'], stdout=subprocess.PIPE)
         merp_proc = subprocess.Popen(['merp', '-'], stdin = file_proc.stdout, 
@@ -352,7 +339,7 @@ def run_merp(mcf,debug=False):
         if re.match('^$',stdout.decode('utf-8')):
             msg = 'No merp output: {0}'.format(stderr.decode('utf-8'))
             msg += 'merpfile: {0}: '.format(mcf)
-            msg += pp.pformat(test)
+            msg += pp.pformat(cmd_str)
             raise RuntimeError(msg)
 
         measurement = parse_long_merp_output(stdout, stderr)
@@ -363,13 +350,14 @@ def run_merp(mcf,debug=False):
             m.update(f.read())
         measurement.update({'erp_md5_s': m.hexdigest()})
 
-        # add extra metadata here ... baseline
-        for transform in ['baseline_s']:
-            if transform in merp_cmds.keys():
-                measurement.update({transform:  merp_cmds[transform]})
+        # log baseline
+        if merp_cmds[1] == 'NA':
+            measurement.update({'baseline_s': 'default'})
+        else:
+            measurement.update({'baseline_s': merp_cmds[1]})
 
+        # log file
         measurement.update({'merpfile_s': mcf})
-
         measurements.append(measurement)
     return(measurements)
 
