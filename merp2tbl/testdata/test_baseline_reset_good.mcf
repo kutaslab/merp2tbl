@@ -1,9 +1,9 @@
 file calstest.x.nrm
 baseline -100 0
-
-channels 15 21 22
-
+channels 15
 meana 1 $ * 200 400
-#fal 1 $ * 250 400 + .5
+baseline 200 400
+meana 1 $ * 200 400
+
 
 

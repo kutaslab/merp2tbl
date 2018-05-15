@@ -88,23 +88,24 @@ def parse_merpfile(merpfile):
              for file in file list 
 
     * Construction of the list of dicts is governed by the
-      state table, see comments.
+      state table, write out the node-arc FSA graph to see
+      how it works.
     
       States 
   
       0 = start
-      1 = file update
-      2 = baseline, channel update
-      3 = measure update
+      1 = init/append file list
+      2 = set/reset baseline, channel
+      3 = init/append measure
       4 = error
 
       state table: 
 
-      (cmd_spec, from_state) -> to_state
+      (cmd, from_state) -> to_state
 
-                            from_state
-                     -------------------
-      cmd_spec[0] |  0   1   2   3  4(Error)
+                       from_state
+                  -------------------
+          cmd     |  0   1   2   3  4(Error)
       ----------------------------------
           file    |  1   1   1   3  -
       channels    |  4   2   2   2  -
@@ -114,7 +115,12 @@ def parse_merpfile(merpfile):
     Usage
     -----
 
-    The merp file should look like this: 
+    See merp docs for merp command file format.
+
+    Files and channels may be reset, each measure command uses
+    whatever the current value of file(s), channels.
+
+    Not sure about baseline
 
     ```
     # at least one file is mandatory
@@ -131,6 +137,7 @@ def parse_merpfile(merpfile):
     measure ...
     measure ...
     measure ...
+
     ```
 
     '''
@@ -222,9 +229,10 @@ def parse_merpfile(merpfile):
             state_key = 'measure'
             if from_state == 0:
                 raise ValueError('file command out of order: ' + cmd_str)
-            elif from_state == 1:
+            elif from_state in [1, 2]:
+                # first measure this file block
                 curr_dict['measures'] = [cmd_str]
-            elif from_state in [2, 3]:
+            elif from_state == 3:
                 curr_dict['measures'].append(cmd_str)
 
         # transition
@@ -234,15 +242,15 @@ def parse_merpfile(merpfile):
     cmd_list.append(curr_dict)
     return(cmd_list)
 
-
-def run_merp(mcf):
+def run_merp(mcf,debug=False):
     '''wrapper parses command file mcf, runs one test at a time via merp - < .tmp
-
 
     Parameters
     ----------
     mcf : string
-       path to merp command file
+        path to merp command file
+    debug : bool
+        if true reports internal command dict before running merp
 
     Returns
     -------
@@ -272,8 +280,11 @@ def run_merp(mcf):
 
     # fetch the merp command file
     merp_cmds_list = parse_merpfile(mcf)
-    # print('merpfile ', mcf)
-    # pp.pprint(merp_cmds_list)
+
+    # optionally report
+    if debug:
+        print('merpfile ', mcf)
+        pp.pprint(merp_cmds_list)
 
     # unpack the wildcards, if any, into individual commands
     test_params = ['measure', 'bin', 'chanspec', 'filespec']
@@ -592,7 +603,8 @@ if __name__ == '__main__':
     import argparse  # successor to optparse
 
     # set up parser
-    parser = argparse.ArgumentParser(description='convert verbose merp output to regular data') 
+    parser = argparse.ArgumentParser(
+        description='convert verbose merp output to standard data interchange formats') 
 
     # names 
     parser.add_argument("mcf", metavar="mcf", type=str, help="merp command file")
@@ -608,7 +620,6 @@ if __name__ == '__main__':
                         help=("'tsv' for tab-separated rows x columns or "
                               "'yaml' for YAML document output"))
 
-
     # supplementary data tags
     parser.add_argument("-tagf", type=str,
                         metavar='tagf',
@@ -616,9 +627,15 @@ if __name__ == '__main__':
                         help=("tagf.yml YAML file with additional "
                               "column data to merge with the output"))
 
+    # supplementary data tags
+    parser.add_argument("-debug", 
+                        action="store_true",
+                        dest="debug",
+                        help=("-debug mode shows command file parse before running merp"))
+
     args_dict = vars(parser.parse_args()) # fetch from sys.argv
-                        
-    result = run_merp(args_dict['mcf'])
+
+    result = run_merp(args_dict['mcf'], args_dict['debug'])
     format_output(result,
                   format=args_dict['format'], 
                   out_keys = args_dict['columns'],
