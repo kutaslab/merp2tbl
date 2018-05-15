@@ -329,7 +329,8 @@ def run_merp(mcf,debug=False):
         with open('.tmp', 'w') as f:
             f.write(cmd_str)
 
-        file_proc = subprocess.Popen(['cat', '.tmp'], stdout=subprocess.PIPE)
+        # file_proc = subprocess.Popen(['cat', '.tmp'], stdout=subprocess.PIPE)
+        file_proc = subprocess.Popen(['echo', cmd_str], stdout=subprocess.PIPE)
         merp_proc = subprocess.Popen(['merp', '-'], stdin = file_proc.stdout, 
                                      stdout=subprocess.PIPE, 
                                      stderr=subprocess.PIPE)
