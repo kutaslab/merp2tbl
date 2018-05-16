@@ -7,7 +7,7 @@ import os.path
 import glob
 import re
 
-import merp2tbl
+import merp2tbl.merp2tbl as merp2tbl
 import pytest
 
 
