@@ -5,13 +5,18 @@
 #     python ./setup.py build_ext --inplace
 #     python ./setup.py develop -d ~/.local/lib/python3.6/site-packages/ 
 #
-# python ./setup.py develop -d ~/.local/lib/python3.6/site-packages --install-option="--install-scripts=/home/turbach/.local/bin"
+#  
 #  to install stable package, as root run 
 #
 #    pip uninstall merp2tbl
-#    pip install . --install-scripts=/usr/local/anaconda/bin
+#    pip install .
 # 
-#  Note it may be necessary to prerun 
+#   and then link the merp2table script in the python site-packages
+#   to /usr/local/anaconda3/bin/merp2table to merp2table script 
+# 
+# or run
+# 
+#    python ./setup.py install --install-scripts=/usr/local/anaconda3/bin
 #  
 #  
 # 
