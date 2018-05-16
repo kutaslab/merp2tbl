@@ -412,7 +412,7 @@ def parse_long_merp_output(data_bytes, err_bytes):
     # line 2 fixed length fields until the last. 
     patt2 = ('^.+\n'
              '(?P<subject_s>.{41})'
-             '(?P<binfo_s>.{40})'
+             '(?P<bin_desc_s>.{40})'
              '(?P<condition_s>.{41})'
              '(?P<expt_s>.{40})'
              '(?P<meas_specs_s>.*)'
@@ -421,7 +421,7 @@ def parse_long_merp_output(data_bytes, err_bytes):
     # line 3 may not exist, e.g., on bad baseline error
     patt3 = ('.+\n.+\n'
              '(?P<meas_desc_s>.+?)'
-             '(?P<value_f>[\.\d]+)\s'
+             '(?P<value_f>[-\.\d]+)\s'
              '(?P<units_s>\S+$)')
 
     # scrape column names from the patterns and precompile
@@ -442,17 +442,18 @@ def parse_long_merp_output(data_bytes, err_bytes):
         if matches is not None:
             row_dict.update(matches.groupdict())
 
-    # parse the 40 char bin number and description chunk
-    bin_patt = ('^\s*bin\s+'
-                '(?P<bin_d>\d+)\s+'
-                '(?P<bin_desc_s>.*)')
-    bin_info = re.match(bin_patt, row_dict['binfo_s']).groupdict()
-    assert len(bin_info) == 2
+    # # parse the 40 char bin number and description chunk
+    # pdb.set_trace()
+    # bin_patt = ('^\s*bin\s+'
+    #             '(?P<bin_d>\d+)\s+'
+    #             '(?P<bin_desc_s>.*)')
+    # bin_info = re.match(bin_patt, row_dict['binfo_s']).groupdict()
+    # assert len(bin_info) == 2
 
     # parse the variable length meas_specs string
     meas_regex = re.compile('^'
                             '(?P<meas_label_s>\w+)\s+'
-                            '(?P<bin2_d>\d+)\s+'
+                            '(?P<bin_d>\d+)\s+'
                             '(?P<chan_d>\d+)\s+'
                             '(?P<erpfile_s>\S+)\s+'
                             '(?P<win_start_f>\d+)\s+'
@@ -463,17 +464,12 @@ def parse_long_merp_output(data_bytes, err_bytes):
     assert len(meas_specs) == 7
 
     # add the new items
-    kvs = [(k,v) for d in [row_dict, bin_info, meas_specs] 
+    kvs = [(k,v) for d in [row_dict, meas_specs] 
            for k,v in d.items() ]
     for k,v in kvs:
         row_dict[k] = v.strip()
 
-    # sanity checks ... 
-    assert row_dict['bin_d'] == row_dict['bin2_d']
-
     # drop the redundant bin and parsed chunks
-    del(row_dict['bin2_d'])
-    del(row_dict['binfo_s'])
     del(row_dict['meas_specs_s'])
 
     # handle missing data
@@ -656,16 +652,12 @@ def validate_output(output, format, mcf):
         msg = 'merp2tbl ' + mcf + 'output value length mismatch'
         return(-1)
 
-    # if no merp error, check all values, else just the non-NAs
-    if proc_res.stderr.decode('utf-8') == '':
-        if merp_vals != merp2tbl_vals:
-            msg = 'merp2tbl ' + mcf + ' output value mismatch, no softerrors'
+    # check value for value, skip NAs 
+    for i,v in enumerate(merp2tbl_vals):
+        if v != 'NA' and not merp_vals[i] == merp2tbl_vals[i]:
+            msg = 'merp2tbl {0} output line {1}: {2} != merp -d {3}'.format(
+                mcf, i, merp2tbl_vals[i], merp_vals[i])
             return(-2, msg)
-    else:
-        if not all([merp_vals[i] == merp2tbl_vals[i]
-                    for i,v in enumerate(merp2tbl_vals) if v != 'NA']):
-            msg = 'merp2tbl ' + mcf + ' output value non-NA mismatch, some softerrors'
-            return(-3, msg)
     return(0, '')
 
         
