@@ -77,7 +77,7 @@ def test_merp2tbl_output_format():
             print('# ' + '-' * 40)
             print('# mcf: {0} format: {1}'.format(mcf, format))
             print('# ' + '-' * 40)
-            merp2tbl.format_output(result, mcf, format=format)
+            merp2tbl.format_output(result, mcf, fmt=format)
             print()
 
 def test_select_columns():
@@ -96,7 +96,7 @@ def test_select_columns():
                 print('# ' + '-' * 40)
                 print('# mcf: {0} format: {1}'.format(mcf, format))
                 print('# ' + '-' * 40)
-                merp2tbl.format_output(result, mcf, format=format, out_keys = cols)
+                merp2tbl.format_output(result, mcf, fmt=format, out_keys = cols)
                 print()
         
 # def test_adlong_good():
