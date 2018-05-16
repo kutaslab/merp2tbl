@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 
-import pytest
+import pdb
 import subprocess
 import os
 import os.path
 import glob
 import re
 
-import merp2tbl 
+import merp2tbl
+import pytest
 
-import pdb
 
 # jump down to testdata to run merp
 os.chdir(os.path.join(os.getcwd(), 'testdata'))
@@ -21,19 +21,19 @@ harderror_mcfs = glob.glob('*harderror*.mcf')
 def test_minimal_good():
 
     mcf = 'test_minimal_good.mcf'
-    merp_cmds = merp2tbl.parse_merpfile(mcf)
-    result = merp2tbl.run_merp(mcf)
+    _ = merp2tbl.parse_merpfile(mcf)
+    _ = merp2tbl.run_merp(mcf)
 
 def test_load_merp_file():
     # go tests
-    for mcf in good_mcfs: 
+    for mcf in good_mcfs:
         merp_cmds = merp2tbl.parse_merpfile(mcf)
 
-    for mcf in softerror_mcfs: 
+    for mcf in softerror_mcfs:
         merp_cmds = merp2tbl.parse_merpfile(mcf)
 
     # nogo tests
-    for mcf in harderror_mcfs: 
+    for mcf in harderror_mcfs:
         with pytest.raises(Exception):
             merp_cmds = merp2tbl.parse_merpfile(mcf)
 
@@ -51,13 +51,13 @@ def test_validate_merp2tbl():
             if not val == 'NA':
                 val = float(val)
             merp2tbl_vals.append(val)
-        
-        # run merp -d and slurp values 
-        proc_res = subprocess.run(['merp', '-d', mcf], 
-                                  stdout=subprocess.PIPE, 
+       
+        # run merp -d and slurp values
+        proc_res = subprocess.run(['merp', '-d', mcf],
+                                  stdout=subprocess.PIPE,
                                   stderr=subprocess.PIPE)
 
-        merp_vals = [float(v) for v in proc_res.stdout.decode('utf-8').split('\n') 
+        merp_vals = [float(v) for v in proc_res.stdout.decode('utf-8').split('\n')
                      if len(v.strip()) > 0]
 
         # if no merp error, check all values, else just the non-NAs
@@ -67,7 +67,7 @@ def test_validate_merp2tbl():
         else:
             assert all([merp_vals[i] == merp2tbl_vals[i]
                         for i,v in enumerate(merp2tbl_vals) if v is not 'NA'])
-            
+           
 
 def test_merp2tbl_output_format():
     for mcf in good_mcfs + softerror_mcfs:
@@ -98,7 +98,7 @@ def test_select_columns():
                 print('# ' + '-' * 40)
                 merp2tbl.format_output(result, mcf, fmt=format, out_keys = cols)
                 print()
-        
+       
 # def test_adlong_good():
 #     mcf = 's003_LongPM.mcf'
 #     merp_cmds = merp2tbl.parse_merpfile(mcf)
