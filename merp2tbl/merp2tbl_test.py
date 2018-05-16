@@ -99,11 +99,11 @@ def test_select_columns():
                 merp2tbl.format_output(result, mcf, format=format, out_keys = cols)
                 print()
         
-def test_adlong_good():
-    mcf = 's003_LongPM.mcf'
-    merp_cmds = merp2tbl.parse_merpfile(mcf)
-    result = merp2tbl.run_merp(mcf, debug=True)
-    formatted = merp2tbl.format_output(result, mcf)
+# def test_adlong_good():
+#     mcf = 's003_LongPM.mcf'
+#     merp_cmds = merp2tbl.parse_merpfile(mcf)
+#     result = merp2tbl.run_merp(mcf, debug=True)
+#     formatted = merp2tbl.format_output(result, mcf)
 
 
 
