@@ -16,6 +16,7 @@ import re
 import hashlib
 import pprint as pp
 import warnings
+import argparse
 
 import yaml
 from yamllint import linter
@@ -635,8 +636,8 @@ def validate_output(output, fmt, mcf):
             return(-2, msg)
     return(0, '')
 
-if __name__ == '__main__':
-    import argparse  # successor to optparse
+def main():
+    ''' wrapper for console_scripts shim '''
 
     # set up parser
     PARSER = argparse.ArgumentParser(
