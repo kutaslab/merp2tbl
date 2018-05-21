@@ -1,7 +1,6 @@
 # to install in development mode, from this directory run
 # 
 #     pip uninstall merp2tbl
-#     python setup.py clean --all
 #     python ./setup.py build_ext --inplace
 #     python ./setup.py develop -d ~/.local/lib/python3.6/site-packages/ 
 #
@@ -17,8 +16,10 @@
 # or run
 # 
 #    python ./setup.py install --install-scripts=/usr/local/anaconda3/bin
+#
+# may need this
 #  
-#  
+#     python setup.py clean --all
 # 
 # http://python-packaging.readthedocs.io/en/latest/minimal.html
 
