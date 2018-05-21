@@ -7,7 +7,7 @@ The module is merp2tbl.py
 
 The command line executable script is
 
-```merp2table``
+```merp2table```
 
 Run 
 
