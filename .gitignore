@@ -1,8 +1,7 @@
 # emacs backups 
 *~ 
 
-# don't need to track jsonlab
-
+*.DS_Store
 
 # kutaslab format stuff
 
