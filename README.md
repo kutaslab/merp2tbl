@@ -14,3 +14,7 @@ Run
 ```merp2table -h```
 
 at the linux command prompt for help
+
+For more informatino see
+
+```docs/usage.md```
