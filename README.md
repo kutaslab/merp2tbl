@@ -15,6 +15,6 @@ Run
 
 at the linux command prompt for help
 
-For more informatino see
+For more information see
 
 ```docs/usage.md```
