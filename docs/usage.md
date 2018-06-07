@@ -4,7 +4,7 @@ usage: merp2table [-h] [-columns COLUMNS [COLUMNS ...]] [-format format] <br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [-tagf tagf] [-debug] <br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mcf <br>
 <br>
-convert verbose merp output to standard data interchange formats
+convert verbose merp output to standard data interchange formats <br>
 <br>
 positional arguments:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;  mcf  --> merp command file<br>
