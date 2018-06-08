@@ -1,18 +1,6 @@
 # How to ...
 
 convert verbose merp output to standard data interchange formats 
-
-positional arguments:
-  mcf  --> merp command file
-
-optional arguments: 
-  -h, --help --> show this help message and exit
-  -columns COLUMNS [COLUMNS ...] --> names of columns to select for the output
- -format format --> 'tsv' for tab-separated rows x columns or 'yaml' for YAML document output
-  -tagf tagf --> tagf.yml YAML file with additional column data to merge with the output
-  -debug --> -debug mode shows command file parse before running merp
-
-
 ## Example:
 
 ```bash
@@ -25,6 +13,24 @@ merp2table: error: the following arguments are required: mcf
 ```
 
 extra commands must be in the order above for merp2table to run
+```
+positional arguments:
+  mcf                   merp command file
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -columns COLUMNS [COLUMNS ...]
+                        names of columns to select for the output
+  -format format        'tsv' for tab-separated rows x columns or 'yaml' for
+                        YAML document output
+  -tagf tagf            tagf.yml YAML file with additional column data to
+                        merge with the output
+  -debug                -debug mode shows command file parse before running
+                        merp
+```
+
+
+
 
 ## Select specific columns for viewing
 add the -columns option and type the names of the columns you want (lowercase, no spaces in between)
