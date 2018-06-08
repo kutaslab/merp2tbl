@@ -19,7 +19,7 @@ optional arguments: <br>
 
 ## Example:
 
-```
+```bash
 [mkresearch1@mkgpu1 turbach]$ merp2table
 usage: merp2table [-h] [-columns COLUMNS [COLUMNS ...]] [-format format]
                   [-tagf tagf] [-debug]
