@@ -14,6 +14,8 @@ merp2table: error: the following arguments are required: mcf
 extra commands must be in the order above for merp2table to run
 
 if you are only using one of the extra commands, it must go after the mcf argument or merp2table will not run
+
+output is always organized alphabetically by variable name with capital letters appearing first
 ```
 positional arguments:
   mcf                   merp command file
@@ -29,9 +31,6 @@ optional arguments:
   -debug                -debug mode shows command file parse before running
                         merp
 ```
-
-
-
 
 ## Select specific columns for viewing
 add the -columns option and type the names of the columns you want (lowercase, no spaces in between)
@@ -53,6 +52,20 @@ Hit minus CR               F4         200.0      400.0     meana
 ```
 
 ## Merge rows of other data with merp output
+Use a yaml file to add metadata to the output of merp2table
+### Example useage:
+```
+[astoermann@mkgpu1 Merp]$ merp2table s001pm.mcf -tagf test_PicMem.yml 
+MainMeasuresLabels	baseline	baseline_tag	bin	bin_desc	chan	chan_desc	condition	epochs	erp_md5	erpfile	experimenter_id	expt	filter_tag	meas_args	meas_desc	meas_label	merp_error	merpfile	subject	task_tag	units	value	win_start	win_stop
+```
+Combine with columns command to see the new labels added (see below for creating the file)
+```
+[astoermann@mkgpu1 Merp]$ merp2table s001pm.mcf -columns bin_desc chan_desc win_start win_stop meas_label MainMeasuresLabels -tagf test_PicMem.yml | column -s $'\t' -t 
+bin_desc                   chan_desc  win_start  win_stop  meas_label  MainMeasuresLabels
+Hit minus CR               Fz         200.0      400.0     meana       FPma_HCdif_200_400_Fz
+Hit minus CR               F3         200.0      400.0     meana       FPma_HCdif_200_400_F3
+Hit minus CR               F4         200.0      400.0     meana       FPma_HCdif_200_400_F4
+```
 create a yaml file with the columns you would like to create to add information to each row (example in testdata) 
 > variable_name:  --> name of the column 
 
