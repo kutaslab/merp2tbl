@@ -42,15 +42,6 @@ bin_desc	chan_desc	win_start	win_stop	meas_label
 Hit minus CR	Fz	200.0	400.0	meana
 Hit minus CR	F3	200.0	400.0	meana
 Hit minus CR	F4	200.0	400.0	meana
-Hit minus CR	Fz	200.0	700.0	fal
-Hit minus CR	F3	200.0	700.0	fal
-Hit minus CR	F4	200.0	700.0	fal
-Hit minus CR	Fz	200.0	400.0	lpkl
-Hit minus CR	F3	200.0	400.0	lpkl
-Hit minus CR	F4	200.0	400.0	lpkl
-Hit minus CR	Fz	200.0	400.0	lpka
-Hit minus CR	F3	200.0	400.0	lpka
-Hit minus CR	F4	200.0	400.0	lpka
 ```
 Tip: you can pipe the output to the column command to make viewing easier since the output is tab delimited 
 ```
@@ -59,15 +50,6 @@ bin_desc                   chan_desc  win_start  win_stop  meas_label
 Hit minus CR               Fz         200.0      400.0     meana
 Hit minus CR               F3         200.0      400.0     meana
 Hit minus CR               F4         200.0      400.0     meana
-Hit minus CR               Fz         200.0      700.0     fal
-Hit minus CR               F3         200.0      700.0     fal
-Hit minus CR               F4         200.0      700.0     fal
-Hit minus CR               Fz         200.0      400.0     lpkl
-Hit minus CR               F3         200.0      400.0     lpkl
-Hit minus CR               F4         200.0      400.0     lpkl
-Hit minus CR               Fz         200.0      400.0     lpka
-Hit minus CR               F3         200.0      400.0     lpka
-Hit minus CR               F4         200.0      400.0     lpka
 ```
 
 ## Merge rows of other data with merp output
@@ -77,6 +59,7 @@ create a yaml file with the columns you would like to create to add information 
 > after colon and space  --> data to apply in that column to each row 
 
 > use a comma delimited list after the colon to add different values to each row 
+
 YAML is very picky about spaces and indentation, line breaks are OK 
 
 ### singleton tags: add a column of data with all rows having the same value (no indentation at beginning of line) 
