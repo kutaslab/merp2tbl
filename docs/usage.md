@@ -11,8 +11,8 @@ usage: merp2table [-h] [-columns COLUMNS [COLUMNS ...]] [-format format]
 merp2table: error: the following arguments are required: mcf
 
 ```
-
 extra commands must be in the order above for merp2table to run
+if you are only using one of the extra commands, it must go after the mcf argument or merp2table will not run
 ```
 positional arguments:
   mcf                   merp command file
