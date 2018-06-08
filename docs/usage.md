@@ -62,7 +62,7 @@ create a yaml file with the columns you would like to create to add information 
 
 YAML is very picky about spaces and indentation, line breaks are OK 
 
-### singleton tags 
+### Singleton Tags 
 add a column of data with all rows having the same value (no indentation at beginning of line) 
 ```
 task_tag: pict mem 
@@ -70,11 +70,13 @@ filter_tag: low pass 15
 baseline_tag: merp default 
 experimenter_id: 17 
 ```
-### tag sequences length > 1 
+### Tag Sequences Length > 1 
 must align 1-1 exactly with merp measurments in order (pick one of two formats)
 
 #### long tag 
-column name on first line followed by a colon, row values on proceding lines with each item on a line preceded by 2 spaces, a hyphen, and 1 space 
+> column name on first line followed by a colon
+
+> row values on proceding lines with each item on a line preceded by 2 spaces, a hyphen, and 1 space 
 ```
 long_row_tag:  
   - tagA 
@@ -107,7 +109,13 @@ long_row_tag:
 #### wide tag  
 for a more condensed file, you can use a wide tag instead of the long tag
 
-column name on first line followed by a colon, row names on proceding lines, comma separated, starting with 2 spaces and an open bracket '[' and ending with a closed braket ']' 
+> column name on first line followed by a colon
+
+> proceeding line starts with 2 spaces and an open square bracket 
+
+> row names listed after the square bracket, comma separated (can add line breaks if you wish)
+
+> ending with a closed square bracket 
 ```
 wide_row_tag:  
   [tagA, tagB, tagC, tagD, tagE, tagF, tagG, tagH, tagI, tagJ,
