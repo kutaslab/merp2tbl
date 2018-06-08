@@ -4,7 +4,7 @@ convert verbose merp output to standard data interchange formats
 ## Example:
 
 ```bash
-[mkresearch1@mkgpu1 turbach]$ merp2table
+[astoermann@mkgpu1 Merp]$ merp2table
 usage: merp2table [-h] [-columns COLUMNS [COLUMNS ...]] [-format format]
                   [-tagf tagf] [-debug]
                   mcf
@@ -35,6 +35,40 @@ optional arguments:
 
 ## Select specific columns for viewing
 add the -columns option and type the names of the columns you want (lowercase, no spaces in between)
+### Example:
+```
+[astoermann@mkgpu1 Merp]$ merp2table s001pm.mcf -columns bin_desc chan_desc win_start win_stop meas_label
+bin_desc	chan_desc	win_start	win_stop	meas_label
+Hit minus CR	Fz	200.0	400.0	meana
+Hit minus CR	F3	200.0	400.0	meana
+Hit minus CR	F4	200.0	400.0	meana
+Hit minus CR	Fz	200.0	700.0	fal
+Hit minus CR	F3	200.0	700.0	fal
+Hit minus CR	F4	200.0	700.0	fal
+Hit minus CR	Fz	200.0	400.0	lpkl
+Hit minus CR	F3	200.0	400.0	lpkl
+Hit minus CR	F4	200.0	400.0	lpkl
+Hit minus CR	Fz	200.0	400.0	lpka
+Hit minus CR	F3	200.0	400.0	lpka
+Hit minus CR	F4	200.0	400.0	lpka
+```
+Tip: you can pipe the output to the column command to make viewing easier since the output is tab delimited 
+```
+[astoermann@mkgpu1 Merp]$ merp2table s001pm.mcf -columns bin_desc chan_desc win_start win_stop meas_label | column -s $'\t' -t 
+bin_desc                   chan_desc  win_start  win_stop  meas_label
+Hit minus CR               Fz         200.0      400.0     meana
+Hit minus CR               F3         200.0      400.0     meana
+Hit minus CR               F4         200.0      400.0     meana
+Hit minus CR               Fz         200.0      700.0     fal
+Hit minus CR               F3         200.0      700.0     fal
+Hit minus CR               F4         200.0      700.0     fal
+Hit minus CR               Fz         200.0      400.0     lpkl
+Hit minus CR               F3         200.0      400.0     lpkl
+Hit minus CR               F4         200.0      400.0     lpkl
+Hit minus CR               Fz         200.0      400.0     lpka
+Hit minus CR               F3         200.0      400.0     lpka
+Hit minus CR               F4         200.0      400.0     lpka
+```
 
 ## Merge rows of other data with merp output
 create a yaml file with the columns you would like to create to add information to each row (example in testdata) 
