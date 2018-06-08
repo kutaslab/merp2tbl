@@ -66,6 +66,7 @@ Hit minus CR               Fz         200.0      400.0     meana       FPma_HCdi
 Hit minus CR               F3         200.0      400.0     meana       FPma_HCdif_200_400_F3
 Hit minus CR               F4         200.0      400.0     meana       FPma_HCdif_200_400_F4
 ```
+### Create File
 create a yaml file with the columns you would like to create to add information to each row (example in testdata) 
 > variable_name:  --> name of the column 
 
@@ -75,7 +76,7 @@ create a yaml file with the columns you would like to create to add information 
 
 YAML is very picky about spaces and indentation, line breaks are OK 
 
-### Singleton Tags 
+#### Singleton Tags 
 add a column of data with all rows having the same value (no indentation at beginning of line) 
 ```
 task_tag: pict mem 
@@ -83,10 +84,10 @@ filter_tag: low pass 15
 baseline_tag: merp default 
 experimenter_id: 17 
 ```
-### Tag Sequences Length > 1 
+#### Tag Sequences Length > 1 
 must align 1-1 exactly with merp measurments in order (pick one of two formats)
 
-#### long tag 
+##### long tag 
 > column name on first line followed by a colon
 
 > row values on proceding lines with each item on a line preceded by 2 spaces, a hyphen, and 1 space 
@@ -119,7 +120,7 @@ long_row_tag:
 ```
 
 
-#### wide tag  
+##### wide tag  
 for a more condensed file, you can use a wide tag instead of the long tag
 
 > column name on first line followed by a colon
@@ -135,13 +136,19 @@ wide_row_tag:
   tagK, tagL, tagM, tagN, tagO, tagP, tagQ, tagR, tagS, tagT, 
   tagU, tagV, tagW, tagX] 
 ```
-
-
 ### to validate a YAML file on linux run
-yamllint filename.yml 
-
-and edit the text until the error messages are gone
-
+#### Example when something goes wrong
+```
+[astoermann@mkgpu1 Merp]$ yamllint test_PicMem.yml 
+test_PicMem.yml
+  112:1     error    syntax error: could not find expected ':'
+```
+edit the text until the error messages are gone
+#### Example when file is fine
+```
+[astoermann@mkgpu1 Merp]$ yamllint test_PicMem.yml 
+[astoermann@mkgpu1 Merp]$ 
+```
 
 ## Choose tabluar vs document output format
 
