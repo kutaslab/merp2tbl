@@ -17,7 +17,10 @@ optional arguments: <br>
 &nbsp;&nbsp;&nbsp;&nbsp;  -debug --> -debug mode shows command file parse before running merp<br>
 <br>
 
+## Example:
+
 ```
+[mkresearch1@mkgpu1 turbach]$ merp2table
 usage: merp2table [-h] [-columns COLUMNS [COLUMNS ...]] [-format format]
                   [-tagf tagf] [-debug]
                   mcf
