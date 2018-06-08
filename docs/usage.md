@@ -37,9 +37,9 @@ add the -columns option and type the names of the columns you want (lowercase, n
 
 ## Merge rows of other data with merp output
 create a yaml file with the columns you would like to create to add information to each row (example in testdata) 
- variable_name:  --> name of the column 
- after colon and space  --> data to apply in that column to each row 
- use a comma delimited list after the colon to add different values to each row 
+> variable_name:  --> name of the column 
+> after colon and space  --> data to apply in that column to each row 
+> use a comma delimited list after the colon to add different values to each row 
 YAML is very picky about spaces and indentation, line breaks are OK 
 
 ### singleton tags: add a column of data with all rows having the same value (no indentation at beginning of line) 
