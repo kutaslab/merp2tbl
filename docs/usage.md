@@ -17,7 +17,26 @@ optional arguments: <br>
 &nbsp;&nbsp;&nbsp;&nbsp;  -debug --> -debug mode shows command file parse before running merp<br>
 <br>
 
-extra commands must be in the order above for merp2table to run
+```
+usage: merp2table [-h] [-columns COLUMNS [COLUMNS ...]] [-format format] <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [-tagf tagf] [-debug] <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mcf <br>
+<br>
+convert verbose merp output to standard data interchange formats <br>
+<br>
+positional arguments:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;  mcf  --> merp command file<br>
+<br>
+optional arguments: <br>
+&nbsp;&nbsp;&nbsp;&nbsp;  -h, --help --> show this help message and exit<br>
+&nbsp;&nbsp;&nbsp;&nbsp;  -columns COLUMNS [COLUMNS ...] --> names of columns to select for the output<br>
+&nbsp;&nbsp;&nbsp;&nbsp; -format format --> 'tsv' for tab-separated rows x columns or 'yaml' for YAML document output<br>
+&nbsp;&nbsp;&nbsp;&nbsp;  -tagf tagf --> tagf.yml YAML file with additional column data to merge with the output<br>
+&nbsp;&nbsp;&nbsp;&nbsp;  -debug --> -debug mode shows command file parse before running merp<br>
+<br>
+```
+
+> extra commands must be in the order above for merp2table to run
 
 ## Select specific columns for viewing
 add the -columns option and type the names of the columns you want (lowercase, no spaces in between)
