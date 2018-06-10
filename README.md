@@ -16,6 +16,4 @@ Run
 
 at the linux command prompt for help
 
-For more information see
-
-https://kutaslab.github.io
+For more information see https://kutaslab.github.io
