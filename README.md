@@ -17,4 +17,4 @@ at the linux command prompt for help
 
 For more information see
 
-```docs/usage.md```
+https://kutaslab.github.io
