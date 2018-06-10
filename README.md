@@ -1,5 +1,6 @@
 # merp2tbl
-convert verbose merp output to tab-separated text or YAML
+
+Convert verbose merp output to tab-separated text or YAML
 
 This output formatter requires the executable compiled C program merp to be installed.
 
