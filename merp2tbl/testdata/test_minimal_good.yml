@@ -1,7 +1,0 @@
----
-task_tag:
-  - pict mem
-filter_tag:
-  - low pass 15
-baseline_tag:
-  - merp default

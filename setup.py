@@ -23,14 +23,10 @@
 # 
 # http://python-packaging.readthedocs.io/en/latest/minimal.html
 
-# from Cython.Distutils import build_ext
-# from Cython.Build import cythonize
 from setuptools import  find_packages, setup, Extension
-import numpy as np
-
 setup(
     name='merp2tbl',
-    version = '0.1',
+    version = '0.2.0dev0',
     description='format ERPSS merp verbose output to tab-separated text or yaml',
     author='Tom Urbach',
     author_email='turbach@ucsd.edu',
@@ -39,7 +35,5 @@ setup(
     entry_points = {
         'console_scripts': ['merp2table=merp2tbl.merp2tbl:main'],
     },
-#    cmdclass = {'build_ext': build_ext},
-#    ext_modules = cythonize(extensions)
 )
 
