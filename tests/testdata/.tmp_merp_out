@@ -1,0 +1,60 @@
+
+
+Channel LDCeRDCe    Sum of    9
+calstest template                        bin 1 cc/cal 1 item 1                   experimental items                       event coded cal pulses                  meana 1 17 calstest.x.nrm 200 400      
+mean amplitude      0.20 uVolts
+
+
+Channel LMOc    Sum of    9
+calstest template                        bin 1 cc/cal 1 item 1                   experimental items                       event coded cal pulses                  meana 1 21 calstest.x.nrm 200 400      
+mean amplitude      0.21 uVolts
+
+
+Channel RMOc    Sum of    9
+calstest template                        bin 1 cc/cal 1 item 1                   experimental items                       event coded cal pulses                  meana 1 22 calstest.x.nrm 200 400      
+mean amplitude      0.19 uVolts
+
+
+Channel LDCe    Sum of    9
+calstest template                        bin 1 cc/cal 1 item 1                   experimental items                       event coded cal pulses                  fal 1 17 calstest.x.nrm 250 400 + .5  
+fractional area latency       324 milliseconds
+
+
+Channel LMOc    Sum of    9
+calstest template                        bin 1 cc/cal 1 item 1                   experimental items                       event coded cal pulses                  fal 1 21 calstest.x.nrm 250 400 + .5  
+fractional area latency       324 milliseconds
+
+
+Channel RMOc    Sum of    9
+calstest template                        bin 1 cc/cal 1 item 1                   experimental items                       event coded cal pulses                  fal 1 22 calstest.x.nrm 250 400 + .5  
+fractional area latency       324 milliseconds
+
+
+Channel LDCe    Sum of    9
+calstest template                        bin 1 cc/cal 1 item 1                   experimental items                       event coded cal pulses                  lpkl 1 17 calstest.x.nrm 258 264 + 3  
+local peak latency       264 milliseconds
+
+
+Channel LMOc    Sum of    9
+calstest template                        bin 1 cc/cal 1 item 1                   experimental items                       event coded cal pulses                  lpkl 1 21 calstest.x.nrm 258 264 + 3  
+local peak latency       264 milliseconds
+
+
+Channel RMOc    Sum of    9
+calstest template                        bin 1 cc/cal 1 item 1                   experimental items                       event coded cal pulses                  lpkl 1 22 calstest.x.nrm 258 264 + 3  
+local peak latency       264 milliseconds
+
+
+Channel LDCe    Sum of    9
+calstest template                        bin 1 cc/cal 1 item 1                   experimental items                       event coded cal pulses                  lpka 1 17 calstest.x.nrm 254 260 + 3  
+local peak amplitude      0.60 uVolts
+
+
+Channel LMOc    Sum of    9
+calstest template                        bin 1 cc/cal 1 item 1                   experimental items                       event coded cal pulses                  lpka 1 21 calstest.x.nrm 254 260 + 3  
+local peak amplitude      0.64 uVolts
+
+
+Channel RMOc    Sum of    9
+calstest template                        bin 1 cc/cal 1 item 1                   experimental items                       event coded cal pulses                  lpka 1 22 calstest.x.nrm 254 260 + 3  
+local peak amplitude      0.59 uVolts

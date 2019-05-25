@@ -1,15 +1,17 @@
 #!/usr/bin/env python
-
-'''
+"""
 Format long form merp text output as rows x columns or YAML document.
 
-Output options
--------
-- tab separated rows x columns or a YAML document
-- merge in additional data from a separate YAML file
-- select the columns (keys in YAML) of data
+Notes
+-----
 
-'''
+  tab separated rows x columns or a YAML document
+
+  merge in additional data from a separate YAML file
+
+  select the columns (keys in YAML) of data
+
+"""
 
 import subprocess
 import re
@@ -87,6 +89,18 @@ def load_tagfile(tag_file):
 def parse_merpfile(merpfile):
     '''parse merp command file
 
+    See merp docs for merp command file format.
+
+    At least one file is mandatory before a measurement is made
+
+    merp's algorithm (probably)
+
+    The list of files accumulates across the file. Baseline and
+    channels are set when encountered. Wild cards expand current lists
+    and apply current baseline when the measurement command is
+    encountered.
+
+
     Parameters
     ----------
     merpfile : str
@@ -111,14 +125,17 @@ def parse_merpfile(merpfile):
       To reconstruct the merp test output in canonical merp order,
       expand the list of dicts, channels and files like so
 
-        for each dict in list:
+      ```
+      for each dict in list:
           for each chan in chan list
              for file in file list
+      ```
 
     * Construction of the list of dicts is governed by the
       state table, write out the node-arc FSA graph to see
       how it works.
 
+      ```
       States:
 
       0 = -files, -channels (start, all measures fail)
@@ -132,6 +149,7 @@ def parse_merpfile(merpfile):
 
       (cmd, from_state) -> to_state
 
+
                         from_state
                      ----------------
           cmd        |  0   1   2  3
@@ -142,22 +160,8 @@ def parse_merpfile(merpfile):
       measure chan   |  4   4   2  3
       measure $      |  4   4   5  3
 
-    Usage
-    -----
-
-    See merp docs for merp command file format.
-
-    At least one file is mandatory before a measurement is made
-
-    merp's algorithm (probably)
-
-    The list of files accumulates across the file. Baseline and
-    channels are set when encountered. Wild cards expand current lists
-    and apply current baseline when the measurement command is
-    encountered.
 
 
-    ```
     # typical
 
     file ...
