@@ -4,11 +4,11 @@ install:
     - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
     - bash miniconda.sh -b -p $HOME/miniconda
     - export PATH="$HOME/miniconda/bin:$PATH"
-    - hash -r
+    - hash -rmerp
     - conda config --set always_yes yes --set changeps1 no
     - conda info -a
     - conda env create -f conda/environment.yml
-    - source activate merp2tbl
+    - source activate merp2table
     - conda list
     - lscpu
     - python -c 'import numpy; numpy.show_config()'
