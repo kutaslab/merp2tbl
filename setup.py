@@ -1,11 +1,11 @@
 # Installation (from a bash shell terminal window)
-# 
+#
 # The options are to install system wide for all users # as root for
 # for individual users by installing into a conda virtual environment.
 #
 #
 # 1. navigate to some working directory and clone the git repo like so
-#    
+#
 #      $ git clone https://github.com/kutaslab/merp2tbl
 #
 #
@@ -17,7 +17,7 @@
 #      /usr/local/anaconda3/bin/pip
 #
 #   2.2  navigate into the merp2tbl directory with this setup.py file and run
-#   
+#
 #      $ pip uninstall merp2tbl
 #      $ pip install .
 #
@@ -37,11 +37,11 @@
 #
 #       $ conda activate merp2table_0.2
 #
-#   3.3 navigate back up to the merp2tbl directory that has setup.py and 
+#   3.3 navigate back up to the merp2tbl directory that has setup.py and
 #       install merp2table in the active environment like so
 #
 #       (merp2table_0.2) $ pip install .
-# 
+#
 #   3.4 confirm the merp2table executable is the one in the active environment
 #
 #       (merp2table_0.2) $ which merp2table
