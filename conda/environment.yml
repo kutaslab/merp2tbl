@@ -1,0 +1,13 @@
+# usage:
+#   conda env create -f environment.yml
+#   conda activate merp2tbl
+---
+name: merp2table_0.2
+channels:
+    - conda-forge
+dependencies:
+    - pytest
+    - pytest-cov
+    - python>=3.6
+    - pyyaml
+    - yamllint

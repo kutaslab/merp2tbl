@@ -1,0 +1,25 @@
+---
+package:
+    name: merp2table
+    version: "0.2.0dev0"
+
+source:
+    path: ../
+
+build:
+    script: python setup.py install --single-version-externally-managed --record=record.txt
+
+requirements:
+    build:
+        - python
+
+    run:
+        - python
+        - pyyaml
+        - yamllint
+        - pytest
+
+about:
+    home: https://github.com/kutaslab/merp2tbl
+    license: BSD
+    license_file: LICENSE
