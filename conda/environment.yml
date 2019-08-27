@@ -2,7 +2,7 @@
 #   conda env create -f environment.yml
 #   conda activate merp2tbl
 ---
-name: merp2table
+name: merp2table_0.2
 channels:
     - conda-forge
 dependencies:
