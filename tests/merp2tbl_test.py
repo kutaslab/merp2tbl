@@ -6,17 +6,16 @@ import os
 import os.path
 import glob
 import re
+from pathlib import Path
 
 import merp2tbl.merp2tbl as merp2tbl
 import pytest
 
-
-# jump down to testdata to run merp
-os.chdir(os.path.join(os.getcwd(), 'testdata'))
-
-good_mcfs = glob.glob('*good*.mcf')
-softerror_mcfs = glob.glob('*softerror*.mcf')
-harderror_mcfs = glob.glob('*harderror*.mcf')
+p = Path('.')
+os.chdir(p / 'tests' / 'testdata')
+good_mcfs = [str(x) for x in p.glob("*good*.mcf")]
+softerror_mcfs = [str(x) for x in p.glob("*softerror*.mcf")]
+harderror_mcfs = [str(x) for x in p.glob("*harderror*.mcf")]
 
 
 def test_minimal_good():
@@ -112,8 +111,3 @@ def test_select_columns():
                 print()
 
 
-# def test_adlong_good():
-#     mcf = 's003_LongPM.mcf'
-#     merp_cmds = merp2tbl.parse_merpfile(mcf)
-#     result = merp2tbl.run_merp(mcf, debug=True)
-#     formatted = merp2tbl.format_output(result, mcf)

@@ -80,7 +80,7 @@ def load_tagfile(tag_file):
     with open(tag_file, 'r') as f:
         tag_stream = f.read()
     lint_tags(tag_stream)  # raises exception on bad YAML
-    return yaml.load(tag_stream)
+    return yaml.load(tag_stream, Loader=yaml.SafeLoader)
 
 
 # ------------------------------------------------------------
@@ -650,7 +650,7 @@ def validate_output(output, fmt, mcf):
     '''
     merp2tbl_vals = []
     if fmt == 'yaml':
-        for out in yaml.load(output):
+        for out in yaml.load(output, Loader=yaml.SafeLoader):
             if 'value' in out.keys():
                 merp2tbl_vals.append(out['value'])
             else:

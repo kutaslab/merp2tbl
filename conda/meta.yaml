@@ -1,6 +1,6 @@
 ---
 package:
-    name: merp2tabl
+    name: merp2table
     version: "0.2.0dev0"
 
 source:

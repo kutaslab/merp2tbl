@@ -2,13 +2,12 @@
 #   conda env create -f environment.yml
 #   conda activate merp2tbl
 ---
-name: merp2tbl
+name: merp2table
 channels:
-    - kutaslab
     - conda-forge
 dependencies:
     - pytest
     - pytest-cov
-    - python=3.6
+    - python>=3.6
     - pyyaml
     - yamllint

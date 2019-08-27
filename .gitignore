@@ -1,5 +1,12 @@
+# mac
+
+*.DS_Store
+
+
 # emacs backups 
 *~ 
+#*
+.#*
 
 # don't need to track jsonlab
 
