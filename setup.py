@@ -1,23 +1,47 @@
-# to install in development mode, from this directory run
+# Installation 
+# 
+# The options are to install system wide for all users # as root for
+# for individual users by installing into a conda virtual environment.
 #
-#     pip install -e .
 #
-#  to install stable package, clone, then as root run
+# 1. clone the git repo https://github.com/kutaslab/merp2tbl.git
+#    to some working directory 
 #
-#    pip install .
 #
-#   and then link the merp2table script in the python site-packages
-#   to /usr/local/anaconda3/bin/merp2table to merp2table script
+# 2. Option A: Install for all users (requires root permissions)
 #
-# or run
+#   2.1 confirm pip is the anaconda python, should look something like this
 #
-#    python ./setup.py install --install-scripts=/usr/local/anaconda3/bin
+#     [turbach@mkgpu1 merp2tbl]$ which pip
+#      /usr/local/anaconda3/bin/pip
 #
-# may need this
 #
-#     python setup.py clean --all
+#   2.2  navigate to the merp2tbl directory with this setup.py file and run
+#   
+#        pip install .
 #
-# http://python-packaging.readthedocs.io/en/latest/minimal.html
+#
+# 3. Option B: Install per-user into a conda environment (does not need root)
+#
+#   3.1 navigate to merp2tabl/conda and create a new merp2table_0.2 env like so
+#
+#         conda env create -f environment.yml
+#
+#   3.2 activate the new environemnt like so
+#
+#         conda activate merp2table_0.2
+#
+#   3.3 navigate back up to the merp2tbl directory that has setup.py and 
+#       install merp2table in the active environment like so
+#
+#        pip install .
+# 
+#
+# 4. Option C: (for programmers) install in a conda env as in Option B
+#    and run pip like so
+#
+#        pip install -e .
+#
 
 from setuptools import find_packages, setup, Extension
 
