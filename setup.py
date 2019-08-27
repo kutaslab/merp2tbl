@@ -1,13 +1,9 @@
 # to install in development mode, from this directory run
 # 
-#     pip uninstall merp2tbl
-#     python ./setup.py build_ext --inplace
-#     python ./setup.py develop -d ~/.local/lib/python3.6/site-packages/ 
-#
+#     pip install -e . 
 #  
-#  to install stable package, as root run 
+#  to install stable package, clone, then as root run 
 #
-#    pip uninstall merp2tbl
 #    pip install .
 # 
 #   and then link the merp2table script in the python site-packages
