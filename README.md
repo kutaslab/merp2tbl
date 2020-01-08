@@ -1,4 +1,5 @@
 # merp2tbl
+[![DOI](https://zenodo.org/badge/134310918.svg)](https://zenodo.org/badge/latestdoi/134310918)
 
 Convert verbose merp output to tab-separated text or YAML
 
