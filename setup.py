@@ -58,7 +58,7 @@ from setuptools import find_packages, setup, Extension
 
 setup(
     name="merp2tbl",
-    version="0.2.0",
+    version="0.1.3",
     description="format ERPSS merp verbose output to tab-separated text or yaml",
     author="Tom Urbach",
     author_email="turbach@ucsd.edu",
