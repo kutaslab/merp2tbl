@@ -62,7 +62,10 @@ def test_write_tsv_dat():
         # uncomment run merp -d and update gold standard values
         dat_f = mcf.replace("mcf", "dat")
         proc_res = subprocess.run(
-            ["merp", "-d", mcf], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True
+            ["merp", "-d", mcf],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=True,
         )
         with open(dat_f, "wb") as dat:
             dat.write(proc_res.stdout)
@@ -126,7 +129,10 @@ def test_validate_merp2tbl():
 
         # run merp -d and slurp values
         proc_res = subprocess.run(
-            ["merp", "-d", mcf], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True
+            ["merp", "-d", mcf],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=True,
         )
 
         merp_vals = [
