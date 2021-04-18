@@ -12,7 +12,7 @@ import pytest
 
 import merp2tbl.merp2tbl as merp2tbl
 
-IS_CI = "ACTION" in os.environ.keys()
+IS_CI = "GITHUB_ACTION" in os.environ.keys()
 
 skip_ci = pytest.mark.skipif(IS_CI, reason="requires 32-bit binary")
 
