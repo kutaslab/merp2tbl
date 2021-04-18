@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""merp2tbl tests"""
 
 import subprocess
 import os
@@ -7,11 +8,11 @@ import re
 from pathlib import Path
 import hashlib
 import pandas as pd
-
-import merp2tbl.merp2tbl as merp2tbl
 import pytest
 
-IS_CI = True if "ACTION" in os.environ.keys() else False
+import merp2tbl.merp2tbl as merp2tbl
+
+IS_CI = "ACTION" in os.environ.keys()
 
 skip_ci = pytest.mark.skipif(IS_CI, reason="requires 32-bit binary")
 
@@ -53,6 +54,7 @@ DAT_MD5 = {
 # set up
 @skip_ci
 def test_write_tsv_dat():
+    """run locally and write results"""
     for mcf in good_mcfs + softerror_mcfs:
         tsv_f = mcf.replace("mcf", "tsv")
         pd.DataFrame(merp2tbl.run_merp(mcf)).to_csv(tsv_f, sep="\t")
@@ -60,7 +62,7 @@ def test_write_tsv_dat():
         # uncomment run merp -d and update gold standard values
         dat_f = mcf.replace("mcf", "dat")
         proc_res = subprocess.run(
-            ["merp", "-d", mcf], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            ["merp", "-d", mcf], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True
         )
         with open(dat_f, "wb") as dat:
             dat.write(proc_res.stdout)
@@ -82,6 +84,7 @@ def test_check_md5():
 
 
 def test_smoke_parse_merpfile():
+    """just parse"""
     for mcf in good_mcfs + softerror_mcfs:
         merp2tbl.parse_merpfile(mcf)
 
@@ -90,27 +93,8 @@ def test_smoke_parse_merpfile():
             merp2tbl.parse_merpfile(mcf)
 
 
-def test_load_merp_file():
-    # go tests
-    for mcf in good_mcfs:
-        merp2tbl.parse_merpfile(mcf)
-
-    for mcf in softerror_mcfs:
-        merp2tbl.parse_merpfile(mcf)
-
-    # nogo tests
-    for mcf in harderror_mcfs:
-        with pytest.raises(Exception):
-            merp2tbl.parse_merpfile(mcf)
-
-
-# ------------------------------------------------------------
-# not CI testable
-
-
-@skip_ci
 def test_table_dat():
-    # check still match the gold standard output
+    """check the locally generated files haven't changed"""
     for mcf in good_mcfs + softerror_mcfs:
 
         tsv_f = mcf.replace("mcf", "tsv")
@@ -122,6 +106,8 @@ def test_table_dat():
             assert DAT_MD5[dat_f] == hashlib.md5(dat.read()).hexdigest()
 
 
+# ------------------------------------------------------------
+# not CI testable
 @skip_ci
 def test_validate_merp2tbl():
     """ this checks all non-NA data output matches merp output row for row """
@@ -132,15 +118,15 @@ def test_validate_merp2tbl():
         # run merp2tbl
         result = merp2tbl.run_merp(mcf)
         merp2tbl_vals = []
-        for i, r in enumerate(result):
-            val = r["value_f"]
+        for i, res in enumerate(result):
+            val = res["value_f"]
             if not val == "NA":
                 val = float(val)
             merp2tbl_vals.append(val)
 
         # run merp -d and slurp values
         proc_res = subprocess.run(
-            ["merp", "-d", mcf], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            ["merp", "-d", mcf], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True
         )
 
         merp_vals = [
@@ -155,24 +141,25 @@ def test_validate_merp2tbl():
             assert merp_vals == merp2tbl_vals
         else:
             assert all(
-                [
+                (
                     merp_vals[i] == merp2tbl_vals[i]
                     for i, v in enumerate(merp2tbl_vals)
-                    if v is not "NA"
-                ]
+                    if not v == "NA"
+                )
             )
 
 
 @skip_ci
 def test_merp2tbl_output_format():
+    """smoke test formatter"""
     for mcf in good_mcfs + softerror_mcfs:
         result = merp2tbl.run_merp(mcf)
 
-        for format in ["tsv", "yaml"]:
+        for fmt in ["tsv", "yaml"]:
             print("# " + "-" * 40)
-            print("# mcf: {0} format: {1}".format(mcf, format))
+            print(f"# mcf: {mcf} format: {fmt}")
             print("# " + "-" * 40)
-            merp2tbl.format_output(result, mcf, fmt=format)
+            merp2tbl.format_output(result, mcf, fmt=fmt)
             print()
 
 
@@ -189,9 +176,9 @@ def test_select_columns():
         # select even and odd colums = 2 subsets that cover all columns
         for subset in [0, 1]:
             cols = [col_names[idx] for idx in range(subset, n_cols, 2)]
-            for format in ["tsv", "yaml"]:
+            for fmt in ["tsv", "yaml"]:
                 print("# " + "-" * 40)
                 print("# mcf: {0} format: {1}".format(mcf, format))
                 print("# " + "-" * 40)
-                merp2tbl.format_output(result, mcf, fmt=format, out_keys=cols)
+                merp2tbl.format_output(result, mcf, fmt=fmt, out_keys=cols)
                 print()

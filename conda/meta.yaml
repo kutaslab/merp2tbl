@@ -24,6 +24,7 @@ requirements:
     - pyyaml
     - yamllint
     - pytest
+    - pandas
 
 test:
   imports:
