@@ -1,0 +1,7 @@
+	chan_desc_s	epochs_d	subject_s	bin_desc_s	condition_s	expt_s	meas_desc_s	value_f	units_s	meas_label_s	bin_d	chan_d	erpfile_s	win_start_f	win_stop_f	meas_args_s	merp_error_s	erp_md5_s	baseline_s	merpfile_s
+0	MiCe	9	calstest template	bin 1 cc/cal 1 item 1	experimental items	event coded cal pulses	mean amplitude	0.20	uVolts	meana	1	15	calstest.x.nrm	200	400		NA	918cdbe89ac5b45b5dd833d99b3a114c	baseline -100 0	files_reset_good.mcf
+1	MiCe	9	calstest template	bin 1 cc/cal 1 item 1	experimental items	event coded cal pulses	mean amplitude	0.20	uVolts	meana	1	15	calstest.x.nrm	200	400		NA	918cdbe89ac5b45b5dd833d99b3a114c	baseline -100 0	files_reset_good.mcf
+2	MiCe	9	calstest template	bin 1 cc/cal 1 item 1	experimental items	event coded cal pulses	mean amplitude	0.20	uVolts	meana	1	15	calstest.x.nrm	200	400		NA	918cdbe89ac5b45b5dd833d99b3a114c	baseline -100 0	files_reset_good.mcf
+3	MiCe	9	calstest template	bin 1 cc/cal 1 item 1	experimental items	event coded cal pulses	mean amplitude	0.20	uVolts	meana	1	15	calstest.x.nrm	200	400		NA	918cdbe89ac5b45b5dd833d99b3a114c	baseline -100 0	files_reset_good.mcf
+4	MiCe	9	calstest template	bin 1 cc/cal 1 item 1	experimental items	event coded cal pulses	mean amplitude	0.10	uVolts	meana	1	15	calstest.x.avg	200	400		NA	421207f4a07e71ec166e166cbb76924a	baseline -100 0	files_reset_good.mcf
+5	MiCe	9	calstest template	bin 1 cc/cal 1 item 1	experimental items	event coded cal pulses	mean amplitude	0.20	uVolts	meana	1	15	calstest.x.nrm	200	400		NA	918cdbe89ac5b45b5dd833d99b3a114c	baseline -100 0	files_reset_good.mcf

@@ -1,25 +1,36 @@
----
+{% set data = load_setup_py_data() %}
+
 package:
-    name: merp2table
-    version: "0.2.0dev0"
+  name: merp2tbl
+  version: {{ data.get('version') }}
 
 source:
-    path: ../
+  # path: ../
+  git_url: ../  # triggers GIT_X_Y env vars on TravisCI
 
 build:
-    script: python setup.py install --single-version-externally-managed --record=record.txt
+  # setting string embeds git short SHA in conda tarball name
+  # script: python setup.py install --single-version-externally-managed --record=record.txt
+  script: pip install . -vv --no-deps
+  # github vN.N.N release builds are tagged with git short hash and conda build number, Action deploys should be 0
+  string: py{{environ.get("CONDA_PY", "XX")}}{{environ.get("GIT_ABBREV_COMMIT", "no_git_abbrev_commit") }}_{{ environ.get("PKG_BUILDNUM", "no_pkg_buildnum") }}
 
 requirements:
-    build:
-        - python
+  host:
+    - python {{ python }}
+    - pip
+  run:
+    - python {{ python }}
+    - pyyaml
+    - yamllint
+    - pytest
+    - pandas
 
-    run:
-        - python
-        - pyyaml
-        - yamllint
-        - pytest
+test:
+  imports:
+    - merp2tbl
 
 about:
-    home: https://github.com/kutaslab/merp2tbl
-    license: BSD
-    license_file: LICENSE
+  home: https://github.com/kutaslab/merp2tbl
+  license: BSD
+  license_file: LICENSE
