@@ -1,20 +1,20 @@
 # merp2tbl
 [![DOI](https://zenodo.org/badge/134310918.svg)](https://zenodo.org/badge/latestdoi/134310918)
 
-Convert verbose merp output to tab-separated text or YAML
+This command line formatter converts verbose merp output to tab-separated text or YAML
 
-This output formatter requires the executable compiled C program merp to be installed.
+## Example
 
-The module is merp2tbl.py
+```$ merp2table myfile.mcf >> myfile.dat```
 
-The command line executable script is
+## Help 
 
-```merp2table```
+```$ merp2table -h```
 
-Run 
 
-```merp2table -h```
+For more usage see the [Wiki How To](https://github.com/kutaslab/merp2tbl/wiki/How-to)
 
-at the linux command prompt for help
+## Note
 
-For more information see https://kutaslab.github.io
+Requires the binary executable `merp` program.
+
