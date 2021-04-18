@@ -24,16 +24,16 @@ harderror_mcfs = [str(x) for x in p.glob("*harderror*.mcf")]
 MIN_GOOD_MCF = "test_minimal_good.mcf"
 
 TABLE_MD5 = {
-  "baseline_good.tsv": "fcbb50bce149d4aee2f2ec613533499b",
-  "baseline_reset_good.tsv": "49d6ff5097d8f5b71d124ba8f9a76277",
-  "baseline_softerrors.tsv": "a5aa60a8fdf7535755dea9d5a84e3856",
-  "files_reset_good.tsv": "875b95486d5391f4b1a95d6c2ee27d6e",
-  "minimal_good.tsv": "14daf79f2c4f2c7ff612ab7dc795cb21",
-  "newfiles_good.tsv": "c648069159286977bef829adcb13f0b8",
-  "nobaseline_good.tsv": "b939f4f2980ea543c12f5f8fef61a1aa",
-  "softerrors.tsv": "e721a09baa0e77344154840471278aa1",
-  "typical_baseline_good.tsv": "8b19d2814c2cbd3a1913701b82f19219",
-  "typical_good.tsv": "6d90aff002c01d60ce88b46736daafc4",
+    "baseline_good.tsv": "fcbb50bce149d4aee2f2ec613533499b",
+    "baseline_reset_good.tsv": "49d6ff5097d8f5b71d124ba8f9a76277",
+    "baseline_softerrors.tsv": "a5aa60a8fdf7535755dea9d5a84e3856",
+    "files_reset_good.tsv": "875b95486d5391f4b1a95d6c2ee27d6e",
+    "minimal_good.tsv": "14daf79f2c4f2c7ff612ab7dc795cb21",
+    "newfiles_good.tsv": "c648069159286977bef829adcb13f0b8",
+    "nobaseline_good.tsv": "b939f4f2980ea543c12f5f8fef61a1aa",
+    "softerrors.tsv": "e721a09baa0e77344154840471278aa1",
+    "typical_baseline_good.tsv": "8b19d2814c2cbd3a1913701b82f19219",
+    "typical_good.tsv": "6d90aff002c01d60ce88b46736daafc4",
 }
 
 DAT_MD5 = {
@@ -50,22 +50,21 @@ DAT_MD5 = {
 }
 
 # ------------------------------------------------------------
-# set up 
+# set up
 @skip_ci
 def test_write_tsv_dat():
     for mcf in good_mcfs + softerror_mcfs:
         tsv_f = mcf.replace("mcf", "tsv")
-        pd.DataFrame(
-             merp2tbl.run_merp(mcf)
-        ).to_csv(tsv_f, sep="\t")
+        pd.DataFrame(merp2tbl.run_merp(mcf)).to_csv(tsv_f, sep="\t")
 
         # uncomment run merp -d and update gold standard values
         dat_f = mcf.replace("mcf", "dat")
         proc_res = subprocess.run(
             ["merp", "-d", mcf], stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
-        with open(dat_f, 'wb') as dat:
+        with open(dat_f, "wb") as dat:
             dat.write(proc_res.stdout)
+
 
 # ------------------------------------------------------------
 # CI testable
@@ -74,11 +73,11 @@ def test_check_md5():
     for mcf in good_mcfs + softerror_mcfs:
 
         tsv_f = mcf.replace("mcf", "tsv")
-        with open(tsv_f, 'rb') as table:
+        with open(tsv_f, "rb") as table:
             assert TABLE_MD5[tsv_f] == hashlib.md5(table.read()).hexdigest()
 
         dat_f = mcf.replace("mcf", "dat")
-        with open(dat_f, 'rb') as dat:
+        with open(dat_f, "rb") as dat:
             assert DAT_MD5[dat_f] == hashlib.md5(dat.read()).hexdigest()
 
 
@@ -108,18 +107,20 @@ def test_load_merp_file():
 # ------------------------------------------------------------
 # not CI testable
 
+
 @skip_ci
 def test_table_dat():
     # check still match the gold standard output
     for mcf in good_mcfs + softerror_mcfs:
 
         tsv_f = mcf.replace("mcf", "tsv")
-        with open(tsv_f, 'rb') as table:
+        with open(tsv_f, "rb") as table:
             assert TABLE_MD5[tsv_f] == hashlib.md5(table.read()).hexdigest()
 
         dat_f = mcf.replace("mcf", "dat")
-        with open(dat_f, 'rb') as dat:
+        with open(dat_f, "rb") as dat:
             assert DAT_MD5[dat_f] == hashlib.md5(dat.read()).hexdigest()
+
 
 @skip_ci
 def test_validate_merp2tbl():
