@@ -128,8 +128,8 @@ jobs:
           conda activate env_$PY_VER
           conda install -q black pytest pytest-cov
           conda list
-          lscpu
-          python -c 'import numpy; numpy.show_config()'
+          # lscpu
+          # python -c 'import numpy; numpy.show_config()'
           black --check --verbose -S -l 79 .
           pytest --cov=$PACKAGE_NAME # test as installed by conda
 
