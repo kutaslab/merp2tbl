@@ -3,6 +3,10 @@
 
 This command line formatter converts verbose merp output to tab-separated text or YAML
 
+## Installation into a conda environment
+
+```conda install -c kutaslab merp2tbl```
+
 ## Example
 
 ```$ merp2table myfile.mcf >> myfile.dat```
