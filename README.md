@@ -5,7 +5,10 @@ This command line formatter converts verbose merp output to tab-separated text o
 
 ## Installation into a conda environment
 
-```conda install -c kutaslab merp2tbl```
+```
+# conda install -c kutaslab merp2tbl  # !! NO unsatisfiable 08/06/21
+conda install -c conda-forge -c defaults -c kutaslab merp2tbl
+```
 
 ## Example
 
